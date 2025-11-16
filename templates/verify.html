@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Ticket - Party Entry System</title>
+    <title>⚡ VERIFY - CYBERPASS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-content">
-            <div class="logo">🎉 PartyPass</div>
+            <div class="logo">⚡ CYBERPASS ⚡</div>
             <ul class="nav-links">
                 <li><a href="/">Home</a></li>
                 <li><a href="/register">Register</a></li>
@@ -21,20 +22,38 @@
     </nav>
 
     <div class="container">
-        <div class="card" style="max-width: 600px; margin: 3rem auto;">
+        <div class="card" style="max-width: 800px; margin: 3rem auto;">
             <div class="card-header">
                 <h2>Verify Party Entry</h2>
-                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Enter your ticket ID to verify entry</p>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Scan QR code with camera or enter ticket ID manually</p>
             </div>
 
-            <form method="POST" action="/verify" style="max-width: 500px; margin: 0 auto;">
-                <div class="form-group">
-                    <label for="ticket_id">Ticket ID</label>
-                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" required 
-                           placeholder="Enter 8-character code" maxlength="8" style="text-transform: uppercase; font-family: monospace; font-size: 1.2rem; letter-spacing: 0.2rem; text-align: center;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;" id="verify-grid">
+                <!-- QR Scanner Section -->
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #00ffff; text-align: center; text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; font-weight: 900; text-transform: uppercase; letter-spacing: 3px;">📷 SCAN QR CODE</h3>
+                    <div id="qr-reader" style="width: 100%; min-height: 300px; background: rgba(0,0,0,0.5); border: 3px solid var(--neon-cyan); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; box-shadow: 0 0 30px rgba(0, 255, 255, 0.6), inset 0 0 20px rgba(0, 255, 255, 0.1);">
+                        <p style="color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">⚡ CLICK START SCANNER ⚡</p>
+                    </div>
+                    <button id="start-scanner" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem; font-weight: 900; letter-spacing: 3px;">⚡ START SCANNER</button>
+                    <button id="stop-scanner" class="btn btn-danger" style="width: 100%; display: none; font-weight: 900; letter-spacing: 3px;">⛔ STOP SCANNER</button>
+                    <div id="scanner-status" style="text-align: center; margin-top: 0.5rem; color: var(--neon-cyan); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--neon-cyan);"></div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Verify Ticket</button>
-            </form>
+
+                <!-- Manual Entry Section -->
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #ff00ff; text-align: center; text-shadow: 0 0 15px #ff00ff, 0 0 30px #ff00ff; font-weight: 900; text-transform: uppercase; letter-spacing: 3px;">✍️ MANUAL ENTRY</h3>
+                    <form method="POST" action="/verify" id="verify-form">
+                        <div class="form-group">
+                            <label for="ticket_id">Ticket ID</label>
+                            <input type="text" id="ticket_id" name="ticket_id" class="form-control" required 
+                                   placeholder="Enter 8-character code" maxlength="8" 
+                                   style="text-transform: uppercase; font-family: monospace; font-size: 1.2rem; letter-spacing: 0.2rem; text-align: center;">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Verify Ticket</button>
+                    </form>
+                </div>
+            </div>
 
             <div style="margin-top: 2rem; text-align: center;">
                 <a href="/" style="color: var(--primary-color);">← Back to Home</a>
@@ -43,7 +62,130 @@
     </div>
 
     <footer class="footer">
-        <p>&copy; 2024 PartyPass. All rights reserved.</p>
+        <p>&copy; 2024 CYBERPASS. All rights reserved. | ⚡ NEON SYSTEM ⚡</p>
     </footer>
+
+    <style>
+        /* Responsive design for mobile */
+        @media (max-width: 768px) {
+            #verify-grid {
+                grid-template-columns: 1fr !important;
+            }
+            #qr-reader {
+                min-height: 250px !important;
+            }
+        }
+    </style>
+
+    <script>
+        let html5QrcodeScanner = null;
+        const startBtn = document.getElementById('start-scanner');
+        const stopBtn = document.getElementById('stop-scanner');
+        const scannerStatus = document.getElementById('scanner-status');
+        const qrReader = document.getElementById('qr-reader');
+        const ticketInput = document.getElementById('ticket_id');
+        const verifyForm = document.getElementById('verify-form');
+
+        // Start Scanner
+        startBtn.addEventListener('click', () => {
+            // Clear previous scanner
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+
+            // Clear the reader div
+            qrReader.innerHTML = '';
+
+            // Initialize scanner
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            
+                    scannerStatus.textContent = '⚡ INITIALIZING CAMERA...';
+                    scannerStatus.style.color = '#ffff00';
+                    scannerStatus.style.textShadow = '0 0 10px #ffff00';
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, // Use back camera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                (decodedText) => {
+                    // Successfully scanned
+                    console.log("Scanned:", decodedText);
+                    
+                    // Clean the scanned text (remove any extra characters)
+                    const cleanedText = decodedText.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8);
+                    
+                    // Fill the input field
+                    ticketInput.value = cleanedText;
+                    
+                    // Stop scanner
+                    html5QrcodeScanner.stop();
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                    
+                    // Update UI
+                    startBtn.style.display = 'block';
+                    stopBtn.style.display = 'none';
+                    scannerStatus.textContent = '✅ QR CODE SCANNED!';
+                    scannerStatus.style.color = '#00ff88';
+                    scannerStatus.style.textShadow = '0 0 15px #00ff88, 0 0 30px #00ff88';
+                    
+                    // Auto-submit form after short delay
+                    setTimeout(() => {
+                        verifyForm.submit();
+                    }, 500);
+                },
+                (errorMessage) => {
+                    // Error callback - ignore most errors, just show scanning status
+                    if (errorMessage && !errorMessage.includes('NotFoundException')) {
+                        scannerStatus.textContent = 'Scanning...';
+                        scannerStatus.style.color = 'var(--text-secondary)';
+                    }
+                }
+            ).then(() => {
+                // Scanner started successfully
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                    scannerStatus.textContent = '✅ CAMERA ACTIVE - POINT AT QR CODE';
+                    scannerStatus.style.color = '#00ff88';
+                    scannerStatus.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+            }).catch((err) => {
+                // Failed to start scanner
+                console.error("Scanner error:", err);
+                    scannerStatus.textContent = '❌ CAMERA ACCESS DENIED';
+                    scannerStatus.style.color = '#ff6600';
+                    scannerStatus.style.textShadow = '0 0 10px #ff6600';
+                    startBtn.style.display = 'block';
+                    stopBtn.style.display = 'none';
+                    qrReader.innerHTML = '<p style="color: #ff00ff; padding: 2rem; text-shadow: 0 0 10px #ff00ff; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">⚠️ CAMERA NOT AVAILABLE<br>USE MANUAL ENTRY</p>';
+            });
+        });
+
+        // Stop Scanner
+        stopBtn.addEventListener('click', () => {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                    startBtn.style.display = 'block';
+                    stopBtn.style.display = 'none';
+                    scannerStatus.textContent = '⛔ SCANNER STOPPED';
+                    scannerStatus.style.color = '#b0b0b0';
+                    scannerStatus.style.textShadow = 'none';
+                    qrReader.innerHTML = '<p style="color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">⚡ CLICK START SCANNER ⚡</p>';
+                }).catch((err) => {
+                    console.error("Error stopping scanner:", err);
+                });
+            }
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().catch(() => {});
+            }
+        });
+    </script>
 </body>
 </html>
