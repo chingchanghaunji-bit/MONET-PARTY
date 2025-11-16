@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Result - Party Entry System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">🎉 PartyPass</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify">Verify Ticket</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+            {% if "✅" in msg or "Access Granted" in msg %}
+                <div style="font-size: 5rem; margin-bottom: 1rem;">✅</div>
+                <div class="alert alert-success">
+                    <h2 style="margin-bottom: 1rem;">{{ msg }}</h2>
+                    <p style="font-size: 1.1rem;">Welcome to the party! Enjoy your time!</p>
+                </div>
+            {% elif "🚫" in msg or "already used" in msg %}
+                <div style="font-size: 5rem; margin-bottom: 1rem;">🚫</div>
+                <div class="alert alert-warning">
+                    <h2 style="margin-bottom: 1rem;">{{ msg }}</h2>
+                    <p style="font-size: 1.1rem;">This ticket has already been used for entry.</p>
+                </div>
+            {% else %}
+                <div style="font-size: 5rem; margin-bottom: 1rem;">❌</div>
+                <div class="alert alert-danger">
+                    <h2 style="margin-bottom: 1rem;">{{ msg }}</h2>
+                    <p style="font-size: 1.1rem;">Please check your ticket ID and try again.</p>
+                </div>
+            {% endif %}
+
+            <div style="margin-top: 2rem;">
+                <a href="/verify" class="btn btn-primary">Verify Another Ticket</a>
+                <a href="/" class="btn btn-secondary" style="margin-left: 1rem;">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 PartyPass. All rights reserved.</p>
+    </footer>
+</body>
+</html>

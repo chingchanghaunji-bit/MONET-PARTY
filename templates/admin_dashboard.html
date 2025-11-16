@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Party Entry System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">🎉 PartyPass Admin</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin/logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="margin: 2rem 0;">
+            <h1 style="margin-bottom: 0.5rem;">Admin Dashboard</h1>
+            <p style="color: var(--text-secondary);">Manage party registrations and verify entries</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.registered }}</div>
+                <div class="stat-label">Registered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.verified }}</div>
+                <div class="stat-label">Verified Entries</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.pending }}</div>
+                <div class="stat-label">Pending Registration</div>
+            </div>
+        </div>
+
+        <!-- Add User Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Add Authorized User</h2>
+            </div>
+            <form method="POST" action="/admin/add" style="display: flex; gap: 1rem; align-items: end;">
+                <div class="form-group" style="flex: 1; margin: 0;">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" required 
+                           placeholder="user@example.com">
+                </div>
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </form>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card">
+            <div class="search-bar">
+                <input type="text" id="search-input" class="form-control" placeholder="Search users by email, name, phone, or ticket ID...">
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2>All Users</h2>
+            </div>
+            <div class="table-container">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Ticket ID</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Verified</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user[0] }}</td>
+                            <td>{{ user[1] or 'N/A' }}</td>
+                            <td>{{ user[2] or 'N/A' }}</td>
+                            <td style="font-family: monospace; font-weight: bold;">{{ user[4] or 'N/A' }}</td>
+                            <td>
+                                {% if user[5] == 1 %}
+                                    <span class="badge badge-success">Verified</span>
+                                {% elif user[3] == 1 %}
+                                    <span class="badge badge-warning">Registered</span>
+                                {% else %}
+                                    <span class="badge badge-info">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user[3] == 1 %}
+                                    <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user[5] == 1 %}
+                                    <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.875rem; color: var(--text-secondary);">
+                                {% if user[6] %}
+                                    {{ user[6][:10] }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 PartyPass. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const table = document.getElementById('users-table');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
