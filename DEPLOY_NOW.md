@@ -30,7 +30,7 @@ Fill in these **EXACT** settings:
 Name: cyberpass
 Region: (choose closest to you)
 Branch: main
-Root Directory: party_entry_app  ⚠️ VERY IMPORTANT!
+Root Directory: (LEAVE EMPTY)  ⚠️ VERY IMPORTANT! Your files are at repo root!
 Runtime: Python 3
 Build Command: pip install -r requirements.txt
 Start Command: python app.py
