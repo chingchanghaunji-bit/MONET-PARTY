@@ -42,6 +42,20 @@ Your code is now configured to use **Brevo** instead of Gmail. All files have be
 #### Step 3: Configure Settings
 Fill in these **EXACT** settings:
 
+**⚠️ IMPORTANT: Check your GitHub repo structure first!**
+
+**If files are at repository root** (you see `app.py` directly):
+```
+Name: cyberpass
+Region: (choose closest to you)
+Branch: main
+Root Directory: (LEAVE EMPTY)  ⚠️ VERY IMPORTANT!
+Runtime: Python 3
+Build Command: pip install -r requirements.txt
+Start Command: python app.py
+```
+
+**If files are in `party_entry_app` subdirectory**:
 ```
 Name: cyberpass
 Region: (choose closest to you)
@@ -51,6 +65,8 @@ Runtime: Python 3
 Build Command: pip install -r requirements.txt
 Start Command: python app.py
 ```
+
+**How to check:** Visit https://github.com/chingchanghaunji-bit/MONET-PARTY and see if `app.py` is at root or in a folder.
 
 #### Step 4: Add Environment Variables
 Click **"Environment"** tab, then **"Add Environment Variable"** for each:
