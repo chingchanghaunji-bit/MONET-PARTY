@@ -21,7 +21,7 @@ Repository: `https://github.com/chingchanghaunji-bit/MONET-PARTY.git`
 - **Name**: `cyberpass` (or your choice)
 - **Region**: Choose closest to you
 - **Branch**: `main`
-- **Root Directory**: `party_entry_app`
+- **Root Directory**: (LEAVE EMPTY) ⚠️ Files are at repository root!
 - **Runtime**: `Python 3`
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `python app.py`

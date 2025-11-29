@@ -44,7 +44,9 @@ Fill in these **EXACT** settings:
 
 **⚠️ IMPORTANT: Check your GitHub repo structure first!**
 
-**If files are at repository root** (you see `app.py` directly):
+**✅ YOUR REPO STRUCTURE: Files are at repository root!**
+
+Use these settings:
 ```
 Name: cyberpass
 Region: (choose closest to you)
@@ -55,18 +57,7 @@ Build Command: pip install -r requirements.txt
 Start Command: python app.py
 ```
 
-**If files are in `party_entry_app` subdirectory**:
-```
-Name: cyberpass
-Region: (choose closest to you)
-Branch: main
-Root Directory: party_entry_app  ⚠️ VERY IMPORTANT!
-Runtime: Python 3
-Build Command: pip install -r requirements.txt
-Start Command: python app.py
-```
-
-**How to check:** Visit https://github.com/chingchanghaunji-bit/MONET-PARTY and see if `app.py` is at root or in a folder.
+**Confirmed:** Your `app.py`, `requirements.txt`, `Procfile` are all at the root level of your GitHub repo.
 
 #### Step 4: Add Environment Variables
 Click **"Environment"** tab, then **"Add Environment Variable"** for each:

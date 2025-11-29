@@ -25,7 +25,7 @@ Fill in these settings:
 - **Name:** `cyberpass` (or any name you like)
 - **Region:** Choose closest to you
 - **Branch:** `main`
-- **Root Directory:** `party_entry_app` ⚠️ **IMPORTANT!**
+- **Root Directory:** (LEAVE EMPTY) ⚠️ **IMPORTANT!** Files are at repo root!
 - **Runtime:** `Python 3`
 - **Build Command:** `pip install -r requirements.txt`
 - **Start Command:** `python app.py`
