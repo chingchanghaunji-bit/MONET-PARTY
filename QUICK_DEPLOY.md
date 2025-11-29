@@ -41,17 +41,20 @@ HOST = 0.0.0.0
 SECRET_KEY = your-random-secret-key-here
 ADMIN_USER = admin
 ADMIN_PASS = your-secure-password-here
-MAIL_SERVER = smtp.gmail.com
+MAIL_SERVER = smtp-relay.brevo.com
 MAIL_PORT = 587
 MAIL_USE_TLS = True
-MAIL_USERNAME = your-email@gmail.com
-MAIL_PASSWORD = your-gmail-app-password
+MAIL_USERNAME = your-brevo-email@example.com
+MAIL_PASSWORD = your-brevo-smtp-key
 ```
 
-**Note:** For Gmail, you need an **App Password** (not your regular password):
-1. Go to https://myaccount.google.com/apppasswords
-2. Generate a new app password
-3. Use that 16-character password for `MAIL_PASSWORD`
+**Note:** For Brevo, you need your **SMTP Key**:
+1. Go to https://app.brevo.com/settings/keys/api
+2. Login to your Brevo account
+3. Go to "SMTP & API" section
+4. Copy your SMTP key (starts with "xsmtpib-")
+5. Use it for `MAIL_PASSWORD`
+6. Use your Brevo account email for `MAIL_USERNAME`
 
 ### Step 5: Deploy!
 1. Click **"Create Web Service"**

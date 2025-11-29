@@ -92,11 +92,11 @@ Create a `.env` file (optional) for custom settings:
 SECRET_KEY=your-secret-key-here
 ADMIN_USER=admin
 ADMIN_PASS=your-password
-MAIL_SERVER=smtp.gmail.com
+MAIL_SERVER=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_USE_TLS=True
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
+MAIL_USERNAME=your-brevo-email@example.com
+MAIL_PASSWORD=your-brevo-smtp-key
 ```
 
 ## Usage

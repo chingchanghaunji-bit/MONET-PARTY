@@ -33,11 +33,11 @@ FLASK_ENV=production
 FLASK_DEBUG=False
 PORT=10000
 HOST=0.0.0.0
-MAIL_SERVER=smtp.gmail.com
+MAIL_SERVER=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_USE_TLS=True
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
+MAIL_USERNAME=your-brevo-email@example.com
+MAIL_PASSWORD=your-brevo-smtp-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
 ```
@@ -71,11 +71,11 @@ Add in **Variables** tab:
 FLASK_ENV=production
 PORT=10000
 HOST=0.0.0.0
-MAIL_SERVER=smtp.gmail.com
+MAIL_SERVER=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_USE_TLS=True
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
+MAIL_USERNAME=your-brevo-email@example.com
+MAIL_PASSWORD=your-brevo-smtp-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
 ```
@@ -120,18 +120,19 @@ git push heroku main
 
 ---
 
-## 📧 Email Configuration (Gmail)
+## 📧 Email Configuration (Brevo)
 
-### Step 1: Enable 2-Factor Authentication
-1. Go to [Google Account Security](https://myaccount.google.com/security)
-2. Enable 2-Step Verification
+### Step 1: Create Brevo Account
+1. Go to [Brevo.com](https://www.brevo.com) (formerly Sendinblue)
+2. Sign up for a free account (300 emails/day free)
 
-### Step 2: Generate App Password
-1. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-2. Select **"Mail"** and **"Other (Custom name)"**
-3. Name it: `Cyberpass`
-4. Copy the 16-character password
+### Step 2: Get SMTP Key
+1. Login to [Brevo Dashboard](https://app.brevo.com)
+2. Go to **Settings** → **SMTP & API**
+3. Click on **"SMTP"** tab
+4. Copy your **SMTP Key** (starts with "xsmtpib-")
 5. Use this in `MAIL_PASSWORD` environment variable
+6. Use your Brevo account email for `MAIL_USERNAME`
 
 ---
 
