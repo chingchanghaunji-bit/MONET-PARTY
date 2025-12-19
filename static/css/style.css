@@ -196,36 +196,20 @@ body > footer {
     z-index: 10;
 }
 
-/* 3D Transparent Text Effects - Visible with backdrop */
-.hero-content h1,
-.hero-content p,
+/* Text Effects - Clear and Visible */
 .card h2,
 .card h3,
 .card p,
-.logo,
 .nav-links a {
-    /* Transparent text with strong glow for visibility */
+    /* Clear text with subtle glow for visibility */
     color: rgba(255, 255, 255, 0.95);
     text-shadow: 
-        /* Multiple glow layers for depth */
-        0 0 10px rgba(255, 0, 0, 0.9),
-        0 0 20px rgba(255, 0, 0, 0.7),
-        0 0 30px rgba(255, 0, 0, 0.5),
-        0 0 40px rgba(255, 0, 0, 0.3),
-        /* 3D depth effect */
-        2px 2px 4px rgba(0, 0, 0, 0.8),
-        4px 4px 8px rgba(0, 0, 0, 0.6),
-        6px 6px 12px rgba(0, 0, 0, 0.4),
-        /* Backdrop shadow for readability */
-        0 0 20px rgba(0, 0, 0, 0.9),
-        0 0 40px rgba(0, 0, 0, 0.7);
-    /* 3D transform perspective */
-    transform: perspective(1000px) translateZ(0);
-    transform-style: preserve-3d;
+        0 0 10px rgba(0, 212, 255, 0.6),
+        0 0 20px rgba(157, 78, 221, 0.4),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    /* Simple transform */
+    transform: translateZ(0);
     will-change: transform;
-    /* Backdrop filter for glass effect */
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
 }
 
 /* Hero title - Bold and Clear, No Haze/Blur */
