@@ -268,7 +268,7 @@ a, button, input, select, textarea, .btn {
 /* Navigation - Intense Cyberpunk */
 .navbar {
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(20px);
+    backdrop-filter: none;
     padding: 1.2rem 2rem;
     position: sticky;
     top: 0;
@@ -1213,7 +1213,7 @@ tr:hover {
     position: relative;
     z-index: 10;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+    backdrop-filter: none;
     box-shadow: 
         0 -5px 20px rgba(157, 0, 255, 0.3),
         inset 0 5px 20px rgba(157, 0, 255, 0.1);
@@ -1343,7 +1343,7 @@ tr:hover {
     .card,
     .navbar,
     .hero {
-        backdrop-filter: blur(10px);
+        backdrop-filter: none;
     }
     
     /* Table */
@@ -1457,7 +1457,7 @@ h1, h2, h3 {
     box-shadow: var(--glow-soft) !important;
     background: var(--space-card) !important;
     overflow: hidden;
-    backdrop-filter: blur(15px);
+    backdrop-filter: none;
 }
 
 /* Text Selection */
