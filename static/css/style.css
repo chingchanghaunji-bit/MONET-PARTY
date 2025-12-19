@@ -1,32 +1,50 @@
 /* 🏎️ AFTER PARTY - Tunnel Racing Aesthetic */
 
 :root {
-    /* Tunnel Neon Colors - Purple & Blue Dominant */
-    --neon-purple: #9d00ff;
-    --neon-purple-bright: #c77dff;
-    --neon-blue: #0099ff;
-    --neon-blue-bright: #00d4ff;
-    --neon-red: #ff0000;
-    --neon-red-bright: #ff3333;
+    /* Neon Colors - Blue/Violet/White Focus (Unicorn Studio Theme) */
+    --neon-blue: #00d4ff;
+    --neon-blue-bright: #5defff;
+    --neon-violet: #9d4edd;
+    --neon-violet-bright: #c77dff;
+    --neon-white: #ffffff;
     --neon-cyan: #00ffff;
+    
+    /* Legacy support for old references */
+    --neon-purple: var(--neon-violet);
+    --neon-purple-bright: var(--neon-violet-bright);
+    --neon-pink: var(--neon-violet);
+    --neon-green: #00ff88;
+    --neon-red: #ff4444;
     --neon-orange: #ff6600;
     
-    /* Dark Tunnel Backgrounds */
-    --tunnel-dark: #000000;
-    --tunnel-darker: #0a0a0a;
-    --tunnel-card: rgba(15, 15, 30, 0.85);
-    --tunnel-border: rgba(157, 0, 255, 0.3);
+    /* Dark Space Backgrounds */
+    --space-dark: #000000;
+    --space-darker: #0a0a0f;
+    --space-card: rgba(10, 10, 25, 0.75);
+    --space-card-hover: rgba(15, 15, 35, 0.85);
+    --space-border: rgba(157, 78, 221, 0.4);
+    
+    /* Legacy support */
+    --tunnel-dark: var(--space-dark);
+    --tunnel-darker: var(--space-darker);
+    --tunnel-card: var(--space-card);
+    --tunnel-border: var(--space-border);
     
     /* Text Colors */
     --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-red: #ff0000;
+    --text-secondary: #b8b8d0;
+    --text-glow: rgba(0, 212, 255, 0.9);
     
-    /* Intense Glows - Purple/Blue Focus */
-    --glow-purple: 0 0 20px rgba(157, 0, 255, 0.8), 0 0 40px rgba(157, 0, 255, 0.6), 0 0 60px rgba(157, 0, 255, 0.4);
-    --glow-blue: 0 0 20px rgba(0, 153, 255, 0.8), 0 0 40px rgba(0, 153, 255, 0.6), 0 0 60px rgba(0, 153, 255, 0.4);
-    --glow-red: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.6), 0 0 60px rgba(255, 0, 0, 0.4);
-    --glow-cyan: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.6);
+    /* Enhanced Glows - Blue/Violet/White (GPU Optimized) */
+    --glow-blue: 0 0 15px rgba(0, 212, 255, 0.6), 0 0 30px rgba(0, 212, 255, 0.4), 0 0 45px rgba(0, 212, 255, 0.2);
+    --glow-violet: 0 0 15px rgba(157, 78, 221, 0.6), 0 0 30px rgba(157, 78, 221, 0.4), 0 0 45px rgba(157, 78, 221, 0.2);
+    --glow-white: 0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3);
+    --glow-soft: 0 0 30px rgba(0, 212, 255, 0.3), 0 0 60px rgba(157, 78, 221, 0.2);
+    
+    /* Legacy support */
+    --glow-purple: var(--glow-violet);
+    --glow-cyan: 0 0 20px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.4);
+    --glow-red: 0 0 20px rgba(255, 68, 68, 0.6), 0 0 40px rgba(255, 68, 68, 0.4);
 }
 
 * {
@@ -256,11 +274,8 @@ body::before {
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 3px solid rgba(157, 0, 255, 0.6);
-    box-shadow: 
-        0 0 20px rgba(157, 0, 255, 0.6),
-        0 0 40px rgba(0, 153, 255, 0.4),
-        inset 0 0 20px rgba(157, 0, 255, 0.1);
+    border-bottom: 3px solid var(--space-border);
+    box-shadow: var(--glow-soft);
     /* Ensure navbar is above background */
     position: relative;
     z-index: 1000;
@@ -335,9 +350,9 @@ body::before {
     left: 0;
     width: 0;
     height: 3px;
-    background: linear-gradient(90deg, rgba(157, 0, 255, 0.8), rgba(0, 153, 255, 0.8));
-    transition: width 0.3s;
-    box-shadow: 0 0 10px rgba(157, 0, 255, 0.8);
+    background: linear-gradient(90deg, var(--neon-violet), var(--neon-blue));
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
 }
 
 .nav-links a::after {
@@ -345,9 +360,9 @@ body::before {
     position: absolute;
     right: -15px;
     opacity: 0;
-    color: rgba(157, 0, 255, 0.8);
-    transition: all 0.3s;
-    text-shadow: 0 0 10px rgba(157, 0, 255, 0.8);
+    color: var(--neon-violet);
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
 }
 
 .nav-links a:hover {
@@ -360,8 +375,8 @@ body::before {
 
 .nav-links a:hover::before {
     width: 100%;
-    background: linear-gradient(90deg, rgba(157, 0, 255, 0.8), rgba(0, 153, 255, 0.8));
-    box-shadow: 0 0 10px rgba(157, 0, 255, 0.8);
+    background: linear-gradient(90deg, var(--neon-violet), var(--neon-blue));
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
 }
 
 .nav-links a:hover::after {
