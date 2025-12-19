@@ -778,7 +778,9 @@ a, button, input, select, textarea, .btn {
 }
 
 .stat-card {
-    background: rgba(15, 15, 30, 0.85);
+    background: var(--glass-overlay);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     padding: 2rem;
     border-radius: 16px;
     border: 1px solid var(--glass-border);
