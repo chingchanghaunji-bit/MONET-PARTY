@@ -208,17 +208,13 @@ if __name__ == "__main__":
         print("="*50 + "\n")
     
     print("\n🚀 Starting Party Entry System...")
-    print("📍 Server running at: http://localhost:5000")
-    print("🔐 Admin login: http://localhost:5000/admin/login")
-    print("📝 Register: http://localhost:5000/register")
-    print("✅ Verify: http://localhost:5000/verify\n")
+    port = int(os.environ.get("PORT", 10000))
+    print(f"📍 Server running on port: {port}")
+    print("🔐 Admin login: /admin/login")
+    print("📝 Register: /register")
+    print("✅ Verify: /verify\n")
     
-    # Get port from environment variable (for hosting) or use default
-    # For Render.com: host must be 0.0.0.0 and port from PORT env var
-    debug = os.environ.get("FLASK_DEBUG", "True") == "True"
-    
-    if __name__ == "__main__":
-        app.run(
-            host="0.0.0.0",
-            port=int(os.environ.get("PORT", 10000))
-        )
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000))
+    )
