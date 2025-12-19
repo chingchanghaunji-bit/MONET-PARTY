@@ -604,14 +604,14 @@ a, button, input, select, textarea, .btn {
 .form-group label {
     display: block;
     margin-bottom: 0.8rem;
-    color: #c77dff;
-    font-weight: 700;
+    color: var(--text-primary);
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 0.95rem;
     text-shadow: 
-        0 0 10px rgba(157, 0, 255, 0.8),
-        0 0 20px rgba(157, 0, 255, 0.6);
+        0 0 6px rgba(91, 124, 255, 0.3),
+        0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .form-control {
@@ -825,10 +825,10 @@ a, button, input, select, textarea, .btn {
 
 .stat-card:hover {
     /* GPU optimized transform */
-    transform: translateZ(0) scale(1.05) translateY(-10px);
-    border-color: var(--neon-blue);
-    box-shadow: var(--glow-blue);
-    background: var(--space-card-hover);
+    transform: translateZ(0) scale(1.02) translateY(-5px);
+    border-color: var(--spectral-violet);
+    box-shadow: var(--glow-energy);
+    background: var(--glass-hover);
     will-change: transform;
 }
 
@@ -860,12 +860,12 @@ a, button, input, select, textarea, .btn {
 }
 
 .stat-label {
-    color: #b0b0b0;
+    color: var(--text-muted);
     margin-top: 1rem;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 0.95rem;
-    font-weight: 700;
+    font-weight: 500;
     position: relative;
     z-index: 1;
 }
@@ -874,50 +874,49 @@ a, button, input, select, textarea, .btn {
 .table-container {
     overflow-x: auto;
     margin: 2rem 0;
-    border: 2px solid rgba(157, 0, 255, 0.6);
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
-    box-shadow: 
-        0 0 30px rgba(157, 0, 255, 0.5),
-        inset 0 0 20px rgba(157, 0, 255, 0.1);
+    box-shadow: var(--glow-soft);
+    background: var(--glass-overlay);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(15, 15, 30, 0.85);
+    background: transparent;
     border-radius: 12px;
     overflow: hidden;
 }
 
 thead {
-    background: linear-gradient(135deg, rgba(157, 0, 255, 0.2) 0%, rgba(0, 153, 255, 0.2) 100%);
+    background: linear-gradient(135deg, rgba(91, 124, 255, 0.15) 0%, rgba(139, 108, 255, 0.15) 100%);
 }
 
 th {
     padding: 1.2rem;
     text-align: left;
-    font-weight: 900;
-    color: #ffffff;
+    font-weight: 600;
+    color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 0.9rem;
-    border-bottom: 3px solid rgba(157, 0, 255, 0.6);
+    border-bottom: 1px solid var(--glass-border);
     text-shadow: 
-        0 0 10px rgba(157, 0, 255, 0.8),
-        0 0 20px rgba(157, 0, 255, 0.6);
+        0 0 6px rgba(91, 124, 255, 0.3),
+        0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 td {
     padding: 1.2rem;
-    border-top: 1px solid rgba(157, 0, 255, 0.3);
-    color: #ffffff;
+    border-top: 1px solid var(--glass-border);
+    color: var(--text-muted);
 }
 
 tr:hover {
-    background: rgba(157, 0, 255, 0.15);
-    box-shadow: 
-        0 0 30px rgba(157, 0, 255, 0.4),
-        inset 0 0 20px rgba(157, 0, 255, 0.1);
+    background: rgba(91, 124, 255, 0.1);
+    box-shadow: var(--glow-soft);
 }
 
 /* Badges - Tunnel Theme */
@@ -934,43 +933,35 @@ tr:hover {
 }
 
 .badge-success {
-    background: rgba(0, 255, 136, 0.2);
-    color: #00ff88;
-    border-color: #00ff88;
-    box-shadow: 
-        0 0 15px rgba(0, 255, 136, 0.6),
-        inset 0 0 10px rgba(0, 255, 136, 0.2);
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+    background: rgba(77, 227, 255, 0.2);
+    color: var(--cyan-accent);
+    border-color: var(--cyan-accent);
+    box-shadow: var(--glow-cyan);
+    text-shadow: 0 0 6px rgba(77, 227, 255, 0.4);
 }
 
 .badge-warning {
-    background: rgba(255, 255, 0, 0.2);
-    color: #ffff00;
-    border-color: #ffff00;
-    box-shadow: 
-        0 0 15px rgba(255, 255, 0, 0.6),
-        inset 0 0 10px rgba(255, 255, 0, 0.2);
-    text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+    background: rgba(91, 124, 255, 0.2);
+    color: var(--energy-blue);
+    border-color: var(--energy-blue);
+    box-shadow: var(--glow-energy);
+    text-shadow: 0 0 6px rgba(91, 124, 255, 0.4);
 }
 
 .badge-danger {
-    background: rgba(255, 102, 0, 0.2);
-    color: #ff6600;
-    border-color: #ff6600;
-    box-shadow: 
-        0 0 15px rgba(255, 102, 0, 0.6),
-        inset 0 0 10px rgba(255, 102, 0, 0.2);
-    text-shadow: 0 0 10px rgba(255, 102, 0, 0.8);
+    background: rgba(139, 108, 255, 0.2);
+    color: var(--spectral-violet);
+    border-color: var(--spectral-violet);
+    box-shadow: var(--glow-spectral);
+    text-shadow: 0 0 6px rgba(139, 108, 255, 0.4);
 }
 
 .badge-info {
-    background: rgba(0, 255, 255, 0.2);
-    color: #00ffff;
-    border-color: #00ffff;
-    box-shadow: 
-        0 0 15px rgba(0, 255, 255, 0.6),
-        inset 0 0 10px rgba(0, 255, 255, 0.2);
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+    background: rgba(91, 124, 255, 0.2);
+    color: var(--energy-blue);
+    border-color: var(--energy-blue);
+    box-shadow: var(--glow-energy);
+    text-shadow: 0 0 6px rgba(91, 124, 255, 0.4);
 }
 
 /* QR Code Display */
@@ -1096,23 +1087,19 @@ tr:hover {
 }
 
 .alert-danger {
-    background: rgba(255, 102, 0, 0.15);
-    border-color: #ff6600;
-    color: #ff6600;
-    box-shadow: 
-        0 0 30px rgba(255, 102, 0, 0.6),
-        inset 0 0 20px rgba(255, 102, 0, 0.1);
-    text-shadow: 0 0 10px rgba(255, 102, 0, 0.8);
+    background: rgba(139, 108, 255, 0.15);
+    border-color: var(--spectral-violet);
+    color: var(--text-primary);
+    box-shadow: var(--glow-spectral);
+    text-shadow: 0 0 6px rgba(139, 108, 255, 0.4);
 }
 
 .alert-warning {
-    background: rgba(255, 255, 0, 0.15);
-    border-color: #ffff00;
-    color: #ffff00;
-    box-shadow: 
-        0 0 30px rgba(255, 255, 0, 0.6),
-        inset 0 0 20px rgba(255, 255, 0, 0.1);
-    text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+    background: rgba(91, 124, 255, 0.15);
+    border-color: var(--energy-blue);
+    color: var(--text-primary);
+    box-shadow: var(--glow-energy);
+    text-shadow: 0 0 6px rgba(91, 124, 255, 0.4);
 }
 
 /* Feature Cards */
@@ -1126,13 +1113,13 @@ tr:hover {
 .feature-card {
     text-align: center;
     padding: 2.5rem;
-    background: rgba(15, 15, 26, 0.9);
-    border: 2px solid #9d00ff;
+    background: var(--glass-overlay);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
-    transition: all 0.4s;
-    box-shadow: 
-        0 0 20px rgba(157, 0, 255, 0.5),
-        inset 0 0 20px rgba(157, 0, 255, 0.1);
+    transition: all 0.4s ease;
+    box-shadow: var(--glow-soft);
     position: relative;
     overflow: hidden;
 }
@@ -1155,10 +1142,10 @@ tr:hover {
 
 .feature-card:hover {
     /* GPU optimized transform */
-    transform: translateZ(0) translateY(-10px) scale(1.02);
-    border-color: var(--neon-blue);
-    box-shadow: var(--glow-blue);
-    background: var(--space-card-hover);
+    transform: translateZ(0) translateY(-5px) scale(1.01);
+    border-color: var(--spectral-violet);
+    box-shadow: var(--glow-energy);
+    background: var(--glass-hover);
     will-change: transform;
 }
 
