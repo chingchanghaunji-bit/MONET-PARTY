@@ -188,16 +188,105 @@ body > footer {
     z-index: 10;
 }
 
-/* Enhanced readability - add subtle backdrop to text elements */
+/* 3D Transparent Text Effects - Visible with backdrop */
 .hero-content h1,
 .hero-content p,
 .card h2,
 .card h3,
-.card p {
+.card p,
+.logo,
+.nav-links a {
+    /* Transparent text with strong glow for visibility */
+    color: rgba(255, 255, 255, 0.95);
     text-shadow: 
-        0 0 10px rgba(0, 0, 0, 0.8),
-        0 0 20px rgba(0, 0, 0, 0.6),
-        0 2px 4px rgba(0, 0, 0, 0.9);
+        /* Multiple glow layers for depth */
+        0 0 10px rgba(255, 0, 0, 0.9),
+        0 0 20px rgba(255, 0, 0, 0.7),
+        0 0 30px rgba(255, 0, 0, 0.5),
+        0 0 40px rgba(255, 0, 0, 0.3),
+        /* 3D depth effect */
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        4px 4px 8px rgba(0, 0, 0, 0.6),
+        6px 6px 12px rgba(0, 0, 0, 0.4),
+        /* Backdrop shadow for readability */
+        0 0 20px rgba(0, 0, 0, 0.9),
+        0 0 40px rgba(0, 0, 0, 0.7);
+    /* 3D transform perspective */
+    transform: perspective(1000px) translateZ(0);
+    transform-style: preserve-3d;
+    will-change: transform;
+    /* Backdrop filter for glass effect */
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+/* Hero title specific 3D effect */
+.hero-content h1 {
+    color: rgba(255, 0, 0, 0.95);
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    transform: perspective(1000px) rotateX(5deg) translateZ(50px);
+    animation: text3DGlow 3s ease-in-out infinite;
+    text-shadow: 
+        0 0 20px rgba(255, 0, 0, 1),
+        0 0 40px rgba(255, 0, 0, 0.8),
+        0 0 60px rgba(255, 0, 0, 0.6),
+        0 0 80px rgba(255, 0, 0, 0.4),
+        0 0 100px rgba(255, 0, 0, 0.2),
+        /* 3D depth */
+        3px 3px 6px rgba(0, 0, 0, 0.9),
+        6px 6px 12px rgba(0, 0, 0, 0.7),
+        9px 9px 18px rgba(0, 0, 0, 0.5),
+        /* Backdrop */
+        0 0 30px rgba(0, 0, 0, 1),
+        0 0 60px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes text3DGlow {
+    0%, 100% {
+        transform: perspective(1000px) rotateX(5deg) translateZ(50px);
+        text-shadow: 
+            0 0 20px rgba(255, 0, 0, 1),
+            0 0 40px rgba(255, 0, 0, 0.8),
+            0 0 60px rgba(255, 0, 0, 0.6),
+            3px 3px 6px rgba(0, 0, 0, 0.9),
+            0 0 30px rgba(0, 0, 0, 1);
+    }
+    50% {
+        transform: perspective(1000px) rotateX(2deg) translateZ(60px);
+        text-shadow: 
+            0 0 30px rgba(255, 0, 0, 1),
+            0 0 60px rgba(255, 0, 0, 0.9),
+            0 0 90px rgba(255, 0, 0, 0.7),
+            4px 4px 8px rgba(0, 0, 0, 0.9),
+            0 0 40px rgba(0, 0, 0, 1);
+    }
+}
+
+/* Hero subtitle */
+.hero-content p {
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 
+        0 0 15px rgba(157, 78, 221, 0.9),
+        0 0 30px rgba(157, 78, 221, 0.7),
+        0 0 45px rgba(157, 78, 221, 0.5),
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 25px rgba(0, 0, 0, 0.9);
+    transform: perspective(800px) translateZ(30px);
+}
+
+/* Card headings */
+.card h2,
+.card h3 {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 
+        0 0 15px rgba(0, 212, 255, 0.8),
+        0 0 30px rgba(0, 212, 255, 0.6),
+        0 0 45px rgba(0, 212, 255, 0.4),
+        2px 2px 5px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 0, 0, 0.9);
+    transform: perspective(600px) translateZ(20px);
 }
 
 /* Ensure buttons and interactive elements are clickable */
@@ -208,7 +297,7 @@ body > footer {
     z-index: 20;
 }
 
-/* Cursor Trail Container */
+/* Enhanced Cursor Trail Container */
 #cursor-trail {
     position: fixed;
     top: 0;
@@ -217,6 +306,17 @@ body > footer {
     height: 100%;
     pointer-events: none;
     z-index: 9998;
+    overflow: hidden;
+}
+
+/* Enhanced mouse trail particles */
+.cursor-trail-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: screen;
+    filter: blur(1px);
 }
 
 /* Custom cursor for body */
@@ -291,19 +391,24 @@ body::before {
 
 .logo {
     font-size: 2rem;
-    font-weight: 800;
-    color: var(--neon-white);
-    text-shadow: var(--glow-white);
-    letter-spacing: 3px;
+    font-weight: 900;
+    color: rgba(255, 0, 0, 0.95);
+    letter-spacing: 4px;
     text-transform: uppercase;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, var(--neon-white) 0%, var(--neon-blue) 50%, var(--neon-violet) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    /* 3D transparent text with strong glow */
+    text-shadow: 
+        0 0 15px rgba(255, 0, 0, 1),
+        0 0 30px rgba(255, 0, 0, 0.8),
+        0 0 45px rgba(255, 0, 0, 0.6),
+        0 0 60px rgba(255, 0, 0, 0.4),
+        2px 2px 5px rgba(0, 0, 0, 0.9),
+        0 0 25px rgba(0, 0, 0, 1);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     /* GPU optimization */
-    transform: translateZ(0);
+    transform: perspective(1000px) translateZ(0);
+    transform-style: preserve-3d;
     will-change: transform, filter;
     animation: logoGlow 4s ease-in-out infinite;
 }
@@ -390,20 +495,29 @@ body::before {
 .hero {
     text-align: center;
     padding: 5rem 2rem;
-    background: rgba(10, 10, 25, 0.6);
-    backdrop-filter: blur(15px) saturate(150%);
+    /* Transparent background with backdrop blur */
+    background: rgba(10, 10, 25, 0.3);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: 24px;
     margin: 3rem 0;
     position: relative;
-    overflow: hidden;
-    border: 2px solid var(--space-border);
+    overflow: visible;
+    border: 2px solid rgba(157, 78, 221, 0.6);
     box-shadow: var(--glow-soft);
     transition: all 0.4s ease;
     z-index: 10;
-    /* GPU optimization */
-    transform: translateZ(0);
+    /* 3D transform */
+    transform: perspective(1000px) translateZ(0);
+    transform-style: preserve-3d;
     will-change: transform, box-shadow;
     animation: heroGlow 4s ease-in-out infinite;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 11;
+    transform: perspective(1000px) translateZ(0);
 }
 
 @keyframes heroGlow {
@@ -516,19 +630,22 @@ body::before {
 
 /* Cards - Intense Cyberpunk */
 .card {
-    background: var(--space-card);
-    backdrop-filter: blur(15px) saturate(150%);
+    /* Transparent card with backdrop */
+    background: rgba(10, 10, 25, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: 20px;
     padding: 2.5rem;
     margin: 2rem 0;
-    border: 2px solid var(--space-border);
+    border: 2px solid rgba(157, 78, 221, 0.5);
     box-shadow: var(--glow-soft);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     z-index: 10;
-    /* GPU optimization */
-    transform: translateZ(0);
+    /* 3D transform */
+    transform: perspective(800px) translateZ(0);
+    transform-style: preserve-3d;
     will-change: transform, box-shadow;
 }
 

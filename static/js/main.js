@@ -262,7 +262,7 @@ function downloadQR(ticketId) {
     link.click();
 }
 
-// Cursor Trail Effect - GPU Optimized
+// Enhanced Cursor Trail Effect with 3D Glow
 (function() {
     // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -277,15 +277,23 @@ function downloadQR(ticketId) {
     document.body.appendChild(trailContainer);
     
     const trail = [];
-    const trailLength = 15; // Reduced for performance
+    const trailLength = 25; // Increased for more visible trail
     let mouseX = 0;
     let mouseY = 0;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
     
-    // Create trail particles with GPU optimization
+    // Create enhanced trail particles with 3D glow
     for (let i = 0; i < trailLength; i++) {
         const particle = document.createElement('div');
-        const size = Math.max(4, 8 - i * 0.25);
-        const opacity = Math.max(0.3, 1 - i * 0.06);
+        particle.className = 'cursor-trail-particle';
+        const size = Math.max(6, 12 - i * 0.2);
+        const opacity = Math.max(0.4, 1 - i * 0.04);
+        const blur = Math.max(0, 3 - i * 0.1);
+        
+        // Alternate colors for visual variety
+        const color1 = i % 3 === 0 ? '0, 212, 255' : (i % 3 === 1 ? '157, 78, 221' : '255, 0, 0');
+        const color2 = i % 3 === 0 ? '157, 78, 221' : (i % 3 === 1 ? '255, 0, 0' : '0, 212, 255');
         
         particle.style.cssText = `
             position: fixed;
@@ -293,30 +301,57 @@ function downloadQR(ticketId) {
             height: ${size}px;
             border-radius: 50%;
             background: radial-gradient(circle, 
-                rgba(0, 212, 255, ${opacity * 0.8}) 0%,
-                rgba(157, 78, 221, ${opacity * 0.6}) 50%,
+                rgba(${color1}, ${opacity * 0.9}) 0%,
+                rgba(${color2}, ${opacity * 0.7}) 40%,
+                rgba(${color1}, ${opacity * 0.3}) 70%,
                 transparent 100%
             );
             pointer-events: none;
-            z-index: 9997;
-            box-shadow: 0 0 ${8 + i}px rgba(0, 212, 255, ${opacity * 0.5});
+            z-index: 9999;
+            box-shadow: 
+                0 0 ${10 + i * 0.5}px rgba(${color1}, ${opacity * 0.8}),
+                0 0 ${20 + i}px rgba(${color2}, ${opacity * 0.6}),
+                0 0 ${30 + i * 1.5}px rgba(${color1}, ${opacity * 0.4}),
+                inset 0 0 ${5 + i * 0.3}px rgba(255, 255, 255, ${opacity * 0.3});
             opacity: ${opacity};
-            transform: translateZ(0);
-            will-change: transform;
+            transform: translate3d(0, 0, ${i * 2}px);
+            filter: blur(${blur}px);
+            mix-blend-mode: screen;
+            will-change: transform, opacity;
+            transition: opacity 0.1s ease-out;
         `;
         trail.push({
             element: particle,
             x: 0,
-            y: 0
+            y: 0,
+            vx: 0,
+            vy: 0
         });
         trailContainer.appendChild(particle);
     }
     
-    // Update trail on mouse move (throttled for performance)
+    // Update trail on mouse move with velocity
     let rafId = null;
     document.addEventListener('mousemove', (e) => {
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        
         mouseX = e.clientX;
         mouseY = e.clientY;
+        
+        // Calculate velocity for trail spread
+        trail.forEach((particle, index) => {
+            if (index === 0) {
+                particle.vx = dx * 0.1;
+                particle.vy = dy * 0.1;
+            } else {
+                particle.vx *= 0.9;
+                particle.vy *= 0.9;
+            }
+        });
+        
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
         
         // Update CSS variable for background glow
         document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
@@ -327,7 +362,7 @@ function downloadQR(ticketId) {
         }
     }, { passive: true });
     
-    // Optimized trail animation using transform
+    // Enhanced trail animation with 3D effects
     function animateTrail() {
         rafId = null;
         let currentX = mouseX;
@@ -339,12 +374,23 @@ function downloadQR(ticketId) {
                 particle.y = currentY;
             } else {
                 const prevParticle = trail[index - 1];
-                particle.x += (prevParticle.x - particle.x) * 0.3;
-                particle.y += (prevParticle.y - particle.y) * 0.3;
+                const lerp = 0.25 + (index * 0.02);
+                particle.x += (prevParticle.x - particle.x) * lerp;
+                particle.y += (prevParticle.y - particle.y) * lerp;
+                
+                // Add velocity spread
+                particle.x += particle.vx;
+                particle.y += particle.vy;
             }
             
-            // Use transform for GPU acceleration
-            particle.element.style.transform = `translate3d(${particle.x - particle.element.offsetWidth / 2}px, ${particle.y - particle.element.offsetHeight / 2}px, 0)`;
+            // 3D transform with depth
+            const depth = index * 3;
+            const scale = 1 - (index * 0.02);
+            particle.element.style.transform = `translate3d(${particle.x - particle.element.offsetWidth / 2}px, ${particle.y - particle.element.offsetHeight / 2}px, ${depth}px) scale(${scale})`;
+            
+            // Pulsing glow effect
+            const pulse = Math.sin(Date.now() * 0.003 + index * 0.5) * 0.2 + 0.8;
+            particle.element.style.opacity = `${Math.max(0.2, (1 - index * 0.04) * pulse)}`;
         });
         
         requestAnimationFrame(animateTrail);
@@ -356,12 +402,14 @@ function downloadQR(ticketId) {
     document.addEventListener('mouseleave', () => {
         trail.forEach(particle => {
             particle.element.style.opacity = '0';
+            particle.element.style.transition = 'opacity 0.3s ease-out';
         });
     }, { passive: true });
     
     document.addEventListener('mouseenter', () => {
         trail.forEach((particle, index) => {
-            particle.element.style.opacity = `${Math.max(0.3, 1 - index * 0.06)}`;
+            particle.element.style.transition = 'opacity 0.1s ease-out';
+            particle.element.style.opacity = `${Math.max(0.4, 1 - index * 0.04)}`;
         });
     }, { passive: true });
 })();
