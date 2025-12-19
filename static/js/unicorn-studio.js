@@ -1,13 +1,14 @@
 // Unicorn Studio Integration
 // Project ID: JETgWpEpJYLpUm9USYby
+// Embed URL: https://www.unicorn.studio/embed/JETgWpEpJYLpUm9USYby
 
 (function() {
     'use strict';
     
     const projectId = 'JETgWpEpJYLpUm9USYby';
     const containerId = 'unicorn-studio-background';
+    const embedUrl = `https://www.unicorn.studio/embed/${projectId}`;
     
-    // Load Unicorn Studio SDK
     function initUnicornStudio() {
         const container = document.getElementById(containerId);
         if (!container) {
@@ -15,42 +16,55 @@
             return;
         }
         
-        // Create script tag to load Unicorn Studio SDK
+        // Try to load Unicorn Studio SDK first
         const script = document.createElement('script');
-        script.src = 'https://cdn.unicorn.studio/unicornStudio.umd.js';
+        script.src = 'https://www.unicorn.studio/sdk/unicornStudio.umd.js';
         script.async = true;
         
         script.onload = function() {
-            if (window.UnicornStudio) {
-                // Initialize Unicorn Studio
+            // Check if SDK loaded successfully
+            if (window.UnicornStudio && typeof window.UnicornStudio.init === 'function') {
+                // Use JavaScript API
                 window.UnicornStudio.init({
                     projectId: projectId,
                     container: container
                 }).then(scenes => {
-                    console.log('Unicorn Studio scenes loaded:', scenes);
+                    console.log('Unicorn Studio initialized successfully:', scenes);
                 }).catch((err) => {
-                    console.error('Unicorn Studio initialization error:', err);
-                    // Fallback: use iframe embed
-                    fallbackEmbed(container);
+                    console.warn('Unicorn Studio SDK init failed, using iframe fallback:', err);
+                    createIframeEmbed(container);
                 });
             } else {
-                console.error('Unicorn Studio SDK not loaded');
-                fallbackEmbed(container);
+                // SDK not available, use iframe embed
+                createIframeEmbed(container);
             }
         };
         
         script.onerror = function() {
-            console.error('Failed to load Unicorn Studio SDK');
-            fallbackEmbed(container);
+            // SDK failed to load, use iframe embed
+            console.log('Unicorn Studio SDK not available, using iframe embed');
+            createIframeEmbed(container);
         };
         
+        // Try loading SDK, but don't wait too long
         document.head.appendChild(script);
+        
+        // Fallback timeout - use iframe if SDK doesn't load quickly
+        setTimeout(() => {
+            if (!container.querySelector('iframe') && !container.querySelector('canvas')) {
+                createIframeEmbed(container);
+            }
+        }, 2000);
     }
     
-    // Fallback to iframe embed if SDK fails
-    function fallbackEmbed(container) {
+    // Create iframe embed (reliable fallback)
+    function createIframeEmbed(container) {
+        // Remove any existing content
+        container.innerHTML = '';
+        
         const iframe = document.createElement('iframe');
-        iframe.src = `https://www.unicorn.studio/embed/${projectId}`;
+        iframe.src = embedUrl;
+        iframe.allow = 'autoplay; fullscreen';
         iframe.style.cssText = `
             position: absolute;
             top: 0;
@@ -59,7 +73,9 @@
             height: 100%;
             border: none;
             pointer-events: none;
+            z-index: -1;
         `;
+        iframe.setAttribute('loading', 'eager');
         container.appendChild(iframe);
     }
     
@@ -72,7 +88,11 @@
     
     // Cleanup function
     window.cleanupUnicornStudio = function() {
-        if (window.UnicornStudio && window.UnicornStudio.destroy) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '';
+        }
+        if (window.UnicornStudio && typeof window.UnicornStudio.destroy === 'function') {
             window.UnicornStudio.destroy();
         }
     };
