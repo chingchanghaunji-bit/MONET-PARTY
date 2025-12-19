@@ -27,10 +27,23 @@ const Utils = {
     },
     
     formatPhone: (value) => {
-        const cleaned = value.replace(/\D/g, '');
-        if (cleaned.length <= 3) return cleaned;
-        if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-        return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+        // Remove all non-digit characters
+        let cleaned = value.replace(/\D/g, '');
+        
+        // Remove leading 91 (India country code) if user types it
+        if (cleaned.startsWith('91') && cleaned.length > 10) {
+            cleaned = cleaned.substring(2);
+        }
+        
+        // Limit to 10 digits (Indian mobile number length)
+        if (cleaned.length > 10) {
+            cleaned = cleaned.slice(0, 10);
+        }
+        
+        // Format as Indian number: +91 XXXXX XXXXX
+        if (cleaned.length === 0) return '';
+        if (cleaned.length <= 5) return `+91 ${cleaned}`;
+        return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
     },
     
     validateEmail: (email) => {
@@ -48,12 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Enhanced phone number formatting
+    // Enhanced phone number formatting - Indian format
     const phoneInputs = document.querySelectorAll('input[type="tel"]');
     phoneInputs.forEach(input => {
         input.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value.length > 10) value = value.slice(0, 10);
+            let value = this.value;
+            // Allow user to type digits, spaces, +, and -
             if (value.length > 0) {
                 this.value = Utils.formatPhone(value);
             }
@@ -61,14 +74,28 @@ document.addEventListener('DOMContentLoaded', function() {
         
         input.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
+            // Auto-format on focus if empty
+            if (!this.value) {
+                this.value = '+91 ';
+            }
         });
         
         input.addEventListener('blur', function() {
-            if (this.value.replace(/\D/g, '').length < 10 && this.value.length > 0) {
+            const digitsOnly = this.value.replace(/\D/g, '');
+            // Remove leading 91 if present
+            const phoneDigits = digitsOnly.startsWith('91') && digitsOnly.length > 10 
+                ? digitsOnly.substring(2) 
+                : digitsOnly;
+            
+            if (phoneDigits.length !== 10 && this.value.length > 0) {
                 this.style.borderColor = 'var(--danger-color)';
-                Utils.showToast('Please enter a valid phone number', 'error');
+                Utils.showToast('Please enter a valid 10-digit Indian mobile number', 'error');
             } else {
                 this.style.borderColor = 'var(--border-color)';
+                // Ensure proper formatting
+                if (phoneDigits.length === 10) {
+                    this.value = Utils.formatPhone(phoneDigits);
+                }
             }
         });
     });
