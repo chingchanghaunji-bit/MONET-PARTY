@@ -217,22 +217,8 @@ if __name__ == "__main__":
     # For Render.com: host must be 0.0.0.0 and port from PORT env var
     debug = os.environ.get("FLASK_DEBUG", "True") == "True"
     
-    # Check if PORT env var is set (cloud platform like Render)
-    if os.environ.get("PORT"):
-        # Cloud platform - use 0.0.0.0 and PORT env var
-        host = "0.0.0.0"
-        port = int(os.environ.get("PORT", 10000))
-    else:
-        # Local development - use 127.0.0.1 and default port 5000
-        host = "127.0.0.1"
-        port = 5000
-    
-    try:
-        app.run(debug=debug, host=host, port=port, use_reloader=False)
-    except OSError as e:
-        if "Address already in use" in str(e) or "WinError 10048" in str(e):
-            print(f"\n❌ Port {port} is already in use!")
-            print("   Trying port 5001 instead...\n")
-            app.run(debug=debug, host=host, port=5001, use_reloader=False)
-        else:
-            raise
+    if __name__ == "__main__":
+        app.run(
+            host="0.0.0.0",
+            port=int(os.environ.get("PORT", 10000))
+        )
