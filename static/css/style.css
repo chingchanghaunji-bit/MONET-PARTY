@@ -790,7 +790,7 @@ body::before {
     font-style: italic;
 }
 
-/* Buttons - Intense Neon */
+/* Buttons - Transparent 3D Neon */
 .btn {
     padding: 1rem 2.5rem;
     border: 3px solid;
@@ -806,7 +806,15 @@ body::before {
     letter-spacing: 3px;
     font-family: 'Arial', sans-serif;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    /* Transparent background with backdrop */
+    background: rgba(10, 10, 25, 0.4);
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    /* 3D transform */
+    transform: perspective(600px) translateZ(0);
+    transform-style: preserve-3d;
+    will-change: transform;
     background: transparent;
 }
 
@@ -844,40 +852,72 @@ body::before {
 }
 
 .btn-primary {
-    border-color: rgba(157, 0, 255, 0.8);
-    color: #c77dff;
+    border-color: rgba(157, 78, 221, 0.8);
+    color: rgba(199, 125, 255, 0.95);
     box-shadow: 
-        0 0 20px rgba(157, 0, 255, 0.6),
-        inset 0 0 20px rgba(157, 0, 255, 0.1);
+        0 0 20px rgba(157, 78, 221, 0.6),
+        0 0 40px rgba(157, 78, 221, 0.4),
+        inset 0 0 20px rgba(157, 78, 221, 0.1);
     text-shadow: 
-        0 0 10px rgba(157, 0, 255, 0.8),
-        0 0 20px rgba(157, 0, 255, 0.6);
+        0 0 10px rgba(157, 78, 221, 0.9),
+        0 0 20px rgba(157, 78, 221, 0.7),
+        0 0 30px rgba(157, 78, 221, 0.5),
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(0, 0, 0, 0.9);
+    transform: perspective(600px) translateZ(10px);
 }
 
 .btn-primary:hover {
-    /* GPU optimized transform */
-    transform: translateZ(0) translateY(-3px) scale(1.05);
-    border-color: var(--neon-violet);
-    color: var(--neon-violet);
-    box-shadow: var(--glow-violet);
-    text-shadow: 0 0 15px rgba(157, 78, 221, 0.8);
+    /* 3D transform on hover */
+    transform: perspective(600px) translateZ(20px) translateY(-3px) scale(1.05);
+    border-color: rgba(157, 78, 221, 1);
+    color: rgba(199, 125, 255, 1);
+    box-shadow: 
+        0 0 30px rgba(157, 78, 221, 0.9),
+        0 0 60px rgba(157, 78, 221, 0.7),
+        0 0 90px rgba(157, 78, 221, 0.5),
+        inset 0 0 30px rgba(157, 78, 221, 0.2);
+    text-shadow: 
+        0 0 15px rgba(157, 78, 221, 1),
+        0 0 30px rgba(157, 78, 221, 0.8),
+        0 0 45px rgba(157, 78, 221, 0.6),
+        3px 3px 6px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(0, 0, 0, 1);
     will-change: transform;
 }
 
 .btn-secondary {
-    border-color: var(--neon-violet);
-    color: var(--neon-violet);
-    box-shadow: var(--glow-violet);
-    text-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
+    border-color: rgba(0, 212, 255, 0.8);
+    color: rgba(93, 239, 255, 0.95);
+    box-shadow: 
+        0 0 20px rgba(0, 212, 255, 0.6),
+        0 0 40px rgba(0, 212, 255, 0.4),
+        inset 0 0 20px rgba(0, 212, 255, 0.1);
+    text-shadow: 
+        0 0 10px rgba(0, 212, 255, 0.9),
+        0 0 20px rgba(0, 212, 255, 0.7),
+        0 0 30px rgba(0, 212, 255, 0.5),
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(0, 0, 0, 0.9);
+    transform: perspective(600px) translateZ(10px);
 }
 
 .btn-secondary:hover {
-    /* GPU optimized transform */
-    transform: translateZ(0) translateY(-3px) scale(1.05);
-    border-color: var(--neon-blue);
-    color: var(--neon-blue);
-    box-shadow: var(--glow-blue);
-    text-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+    /* 3D transform on hover */
+    transform: perspective(600px) translateZ(20px) translateY(-3px) scale(1.05);
+    border-color: rgba(0, 212, 255, 1);
+    color: rgba(93, 239, 255, 1);
+    box-shadow: 
+        0 0 30px rgba(0, 212, 255, 0.9),
+        0 0 60px rgba(0, 212, 255, 0.7),
+        0 0 90px rgba(0, 212, 255, 0.5),
+        inset 0 0 30px rgba(0, 212, 255, 0.2);
+    text-shadow: 
+        0 0 15px rgba(0, 212, 255, 1),
+        0 0 30px rgba(0, 212, 255, 0.8),
+        0 0 45px rgba(0, 212, 255, 0.6),
+        3px 3px 6px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(0, 0, 0, 1);
     will-change: transform;
 }
 
