@@ -814,8 +814,9 @@ a, button, input, select, textarea, .btn {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(157, 0, 255, 0.2) 0%, transparent 70%);
-    animation: statRotate 8s linear infinite;
+    background: radial-gradient(circle, rgba(91, 124, 255, 0.15) 0%, transparent 70%);
+    animation: statRotate 12s linear infinite;
+    opacity: 0.5;
 }
 
 @keyframes statRotate {
@@ -1155,15 +1156,14 @@ tr:hover {
     text-align: center;
     padding: 2.5rem;
     margin-top: 4rem;
-    border-top: 3px solid rgba(157, 0, 255, 0.6);
-    color: #b0b0b0;
+    border-top: 1px solid var(--glass-border);
+    color: var(--text-muted);
     position: relative;
     z-index: 10;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: none;
-    box-shadow: 
-        0 -5px 20px rgba(157, 0, 255, 0.3),
-        inset 0 5px 20px rgba(157, 0, 255, 0.1);
+    background: var(--glass-overlay);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 -2px 20px rgba(91, 124, 255, 0.1);
 }
 
 .footer::before {
