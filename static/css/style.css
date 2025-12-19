@@ -1333,16 +1333,14 @@ tr:hover {
 
 /* Loading Spinner */
 .spinner {
-    border: 4px solid rgba(157, 0, 255, 0.2);
-    border-top: 4px solid rgba(157, 0, 255, 0.8);
+    border: 4px solid rgba(91, 124, 255, 0.2);
+    border-top: 4px solid rgba(139, 108, 255, 0.6);
     border-radius: 50%;
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
     margin: 2rem auto;
-    box-shadow: 
-        0 0 20px rgba(157, 0, 255, 0.6),
-        inset 0 0 20px rgba(157, 0, 255, 0.2);
+    box-shadow: var(--glow-soft);
 }
 
 @keyframes spin {
@@ -1350,11 +1348,12 @@ tr:hover {
     100% { transform: translateZ(0) rotate(360deg); }
 }
 
-/* Text Effects */
+/* Text Effects - Energy Illuminated */
 h1, h2, h3 {
     text-shadow: 
-        0 0 10px rgba(0, 212, 255, 0.3),
-        0 0 20px rgba(0, 212, 255, 0.2);
+        0 0 8px rgba(91, 124, 255, 0.4),
+        0 0 16px rgba(139, 108, 255, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Search Bar */
@@ -1407,13 +1406,13 @@ h1, h2, h3 {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-violet));
+    background: linear-gradient(135deg, var(--energy-blue), var(--spectral-violet));
     border-radius: 6px;
-    box-shadow: var(--glow-blue);
+    box-shadow: var(--glow-energy);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, var(--neon-violet), var(--neon-blue));
-    box-shadow: var(--glow-violet);
+    background: linear-gradient(135deg, var(--spectral-violet), var(--energy-blue));
+    box-shadow: var(--glow-spectral);
 }
 
