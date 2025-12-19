@@ -648,7 +648,7 @@ a, button, input, select, textarea, .btn {
     font-style: italic;
 }
 
-/* Buttons - Transparent 3D Neon */
+/* Buttons - Clear Overlay on Theme */
 .btn {
     padding: 1rem 2.5rem;
     border: 3px solid;
@@ -665,15 +665,13 @@ a, button, input, select, textarea, .btn {
     font-family: 'Arial', sans-serif;
     position: relative;
     overflow: visible;
-    /* Transparent background with backdrop */
-    background: rgba(10, 10, 25, 0.4);
-    backdrop-filter: blur(10px) saturate(150%);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    /* 3D transform */
-    transform: perspective(600px) translateZ(0);
-    transform-style: preserve-3d;
+    /* Minimal transparent background, no blur */
+    background: rgba(10, 10, 25, 0.3);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    /* Simple transform */
+    transform: translateZ(0);
     will-change: transform;
-    background: transparent;
 }
 
 .btn::before {
