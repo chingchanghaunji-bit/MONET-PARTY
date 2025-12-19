@@ -262,39 +262,47 @@ function downloadQR(ticketId) {
     link.click();
 }
 
-// Cursor Trail Effect
+// Cursor Trail Effect - GPU Optimized
 (function() {
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+    
+    // Check device capability (disable on mobile for performance)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) return;
+    
     const trailContainer = document.createElement('div');
     trailContainer.id = 'cursor-trail';
     document.body.appendChild(trailContainer);
     
     const trail = [];
-    const trailLength = 20;
+    const trailLength = 15; // Reduced for performance
     let mouseX = 0;
     let mouseY = 0;
-    let lastX = 0;
-    let lastY = 0;
     
-    // Create trail particles
+    // Create trail particles with GPU optimization
     for (let i = 0; i < trailLength; i++) {
         const particle = document.createElement('div');
+        const size = Math.max(4, 8 - i * 0.25);
+        const opacity = Math.max(0.3, 1 - i * 0.06);
+        
         particle.style.cssText = `
             position: fixed;
-            width: ${8 - i * 0.3}px;
-            height: ${8 - i * 0.3}px;
+            width: ${size}px;
+            height: ${size}px;
             border-radius: 50%;
             background: radial-gradient(circle, 
-                rgba(${157 - i * 5}, ${0 + i * 2}, ${255 - i * 3}, ${1 - i * 0.04}) 0%,
-                rgba(${0 + i * 3}, ${153 - i * 5}, ${255 - i * 2}, ${0.8 - i * 0.03}) 50%,
+                rgba(0, 212, 255, ${opacity * 0.8}) 0%,
+                rgba(157, 78, 221, ${opacity * 0.6}) 50%,
                 transparent 100%
             );
             pointer-events: none;
             z-index: 9997;
-            box-shadow: 
-                0 0 ${10 + i * 2}px rgba(157, 0, 255, ${0.8 - i * 0.03}),
-                0 0 ${20 + i * 3}px rgba(0, 153, 255, ${0.6 - i * 0.02});
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-            opacity: ${1 - i * 0.05};
+            box-shadow: 0 0 ${8 + i}px rgba(0, 212, 255, ${opacity * 0.5});
+            opacity: ${opacity};
+            transform: translateZ(0);
+            will-change: transform;
         `;
         trail.push({
             element: particle,
@@ -304,32 +312,39 @@ function downloadQR(ticketId) {
         trailContainer.appendChild(particle);
     }
     
-    // Update trail on mouse move
+    // Update trail on mouse move (throttled for performance)
+    let rafId = null;
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-    });
+        
+        // Update CSS variable for background glow
+        document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
+        document.documentElement.style.setProperty('--mouse-y', `${(e.clientY / window.innerHeight) * 100}%`);
+        
+        if (!rafId) {
+            rafId = requestAnimationFrame(animateTrail);
+        }
+    }, { passive: true });
     
-    // Animate trail
+    // Optimized trail animation using transform
     function animateTrail() {
+        rafId = null;
         let currentX = mouseX;
         let currentY = mouseY;
         
         trail.forEach((particle, index) => {
-            const nextIndex = index === 0 ? 0 : index - 1;
-            const nextParticle = trail[nextIndex];
-            
             if (index === 0) {
                 particle.x = currentX;
                 particle.y = currentY;
             } else {
-                const dx = nextParticle.x - particle.x;
-                const dy = nextParticle.y - particle.y;
-                particle.x += dx * 0.3;
-                particle.y += dy * 0.3;
+                const prevParticle = trail[index - 1];
+                particle.x += (prevParticle.x - particle.x) * 0.3;
+                particle.y += (prevParticle.y - particle.y) * 0.3;
             }
             
-            particle.element.style.transform = `translate(${particle.x - particle.element.offsetWidth / 2}px, ${particle.y - particle.element.offsetHeight / 2}px)`;
+            // Use transform for GPU acceleration
+            particle.element.style.transform = `translate3d(${particle.x - particle.element.offsetWidth / 2}px, ${particle.y - particle.element.offsetHeight / 2}px, 0)`;
         });
         
         requestAnimationFrame(animateTrail);
@@ -342,12 +357,12 @@ function downloadQR(ticketId) {
         trail.forEach(particle => {
             particle.element.style.opacity = '0';
         });
-    });
+    }, { passive: true });
     
     document.addEventListener('mouseenter', () => {
         trail.forEach((particle, index) => {
-            particle.element.style.opacity = `${1 - index * 0.05}`;
+            particle.element.style.opacity = `${Math.max(0.3, 1 - index * 0.06)}`;
         });
-    });
+    }, { passive: true });
 })();
 
