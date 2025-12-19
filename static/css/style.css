@@ -124,38 +124,7 @@ body {
     will-change: transform;
 }
 
-/* Animated Highlight Overlay - Synced with background */
-#unicorn-studio-background::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-        ellipse at 50% 50%,
-        rgba(0, 212, 255, 0.15) 0%,
-        rgba(157, 78, 221, 0.1) 30%,
-        transparent 60%
-    );
-    animation: highlightPulse 6s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 1;
-    /* GPU optimization */
-    transform: translateZ(0);
-    will-change: opacity, transform;
-}
-
-@keyframes highlightPulse {
-    0%, 100% {
-        opacity: 0.6;
-        transform: translateZ(0) scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: translateZ(0) scale(1.1);
-    }
-}
+/* Remove overlay for clear theme visibility */
 
 /* Mobile optimizations for background */
 @media (max-width: 768px) {
@@ -286,39 +255,7 @@ a, button, input, select, textarea, .btn {
     cursor: pointer !important;
 }
 
-/* Subtle animated highlights synced with background - GPU optimized */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(0, 212, 255, 0.08) 0%,
-        rgba(157, 78, 221, 0.05) 40%,
-        transparent 70%
-    );
-    z-index: 0;
-    pointer-events: none;
-    animation: subtleGlow 8s ease-in-out infinite;
-    /* GPU optimization */
-    transform: translateZ(0);
-    will-change: opacity;
-    opacity: 0.5;
-}
-
-@keyframes subtleGlow {
-    0%, 100% {
-        opacity: 0.3;
-        transform: translateZ(0) scale(1);
-    }
-    50% {
-        opacity: 0.6;
-        transform: translateZ(0) scale(1.05);
-    }
-}
+/* Remove body overlay for clear theme visibility */
 
 .container {
     max-width: 1200px;
@@ -455,82 +392,40 @@ body::before {
     text-shadow: 0 0 10px rgba(157, 0, 255, 0.8);
 }
 
-/* Hero Section - Intense Cyberpunk */
+/* Hero Section - No Box, Direct Overlay on Theme */
 .hero {
     text-align: center;
     padding: 5rem 2rem;
-    /* Transparent background with backdrop blur */
-    background: rgba(10, 10, 25, 0.3);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-radius: 24px;
+    /* Completely transparent - no box */
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 0;
     margin: 3rem 0;
     position: relative;
     overflow: visible;
-    border: 2px solid rgba(157, 78, 221, 0.6);
-    box-shadow: var(--glow-soft);
-    transition: all 0.4s ease;
+    /* No border, no box */
+    border: none;
+    box-shadow: none;
+    transition: none;
     z-index: 10;
-    /* 3D transform */
-    transform: perspective(1000px) translateZ(0);
-    transform-style: preserve-3d;
-    will-change: transform, box-shadow;
-    animation: heroGlow 4s ease-in-out infinite;
+    /* Simple transform */
+    transform: translateZ(0);
+    will-change: transform;
+    /* No animation */
+    animation: none;
 }
 
 .hero-content {
     position: relative;
     z-index: 11;
-    transform: perspective(1000px) translateZ(0);
-}
-
-@keyframes heroGlow {
-    0%, 100% {
-        box-shadow: var(--glow-soft);
-        border-color: var(--space-border);
-        transform: translateZ(0) translateY(0);
-    }
-    50% {
-        box-shadow: var(--glow-blue);
-        border-color: rgba(0, 212, 255, 0.6);
-        transform: translateZ(0) translateY(-2px);
-    }
-}
-
-/* Enhanced animated highlight overlay on hero */
-.hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(0, 212, 255, 0.15), 
-        rgba(157, 78, 221, 0.15),
-        transparent
-    );
-    animation: highlightSweep 6s ease-in-out infinite;
-    pointer-events: none;
-    /* GPU optimization */
     transform: translateZ(0);
-    will-change: transform;
+    /* No blur, clear overlay */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
-@keyframes highlightSweep {
-    0% {
-        transform: translateZ(0) translateX(-100%);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateZ(0) translateX(200%);
-        opacity: 0;
-    }
-}
+
 
 .hero-content {
     position: relative;
@@ -594,23 +489,22 @@ body::before {
 
 /* Cards - Intense Cyberpunk */
 .card {
-    /* Transparent card with backdrop */
-    background: rgba(10, 10, 25, 0.4);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    /* Minimal transparent background, no blur */
+    background: rgba(10, 10, 25, 0.2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border-radius: 20px;
     padding: 2.5rem;
     margin: 2rem 0;
-    border: 2px solid rgba(157, 78, 221, 0.5);
-    box-shadow: var(--glow-soft);
+    border: 2px solid rgba(157, 78, 221, 0.3);
+    box-shadow: 0 0 20px rgba(157, 78, 221, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: visible;
     z-index: 10;
-    /* 3D transform */
-    transform: perspective(800px) translateZ(0);
-    transform-style: preserve-3d;
-    will-change: transform, box-shadow;
+    /* Simple transform */
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 .card::before {
@@ -832,21 +726,17 @@ body::before {
 }
 
 .btn-primary:hover {
-    /* 3D transform on hover */
-    transform: perspective(600px) translateZ(20px) translateY(-3px) scale(1.05);
+    /* Simple transform on hover */
+    transform: translateZ(0) translateY(-3px) scale(1.05);
     border-color: rgba(157, 78, 221, 1);
     color: rgba(199, 125, 255, 1);
     box-shadow: 
-        0 0 30px rgba(157, 78, 221, 0.9),
-        0 0 60px rgba(157, 78, 221, 0.7),
-        0 0 90px rgba(157, 78, 221, 0.5),
-        inset 0 0 30px rgba(157, 78, 221, 0.2);
+        0 0 20px rgba(157, 78, 221, 0.8),
+        0 0 40px rgba(157, 78, 221, 0.6);
     text-shadow: 
-        0 0 15px rgba(157, 78, 221, 1),
-        0 0 30px rgba(157, 78, 221, 0.8),
-        0 0 45px rgba(157, 78, 221, 0.6),
-        3px 3px 6px rgba(0, 0, 0, 0.9),
-        0 0 20px rgba(0, 0, 0, 1);
+        0 0 10px rgba(157, 78, 221, 0.9),
+        0 0 20px rgba(157, 78, 221, 0.7),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
     will-change: transform;
 }
 
@@ -867,21 +757,17 @@ body::before {
 }
 
 .btn-secondary:hover {
-    /* 3D transform on hover */
-    transform: perspective(600px) translateZ(20px) translateY(-3px) scale(1.05);
+    /* Simple transform on hover */
+    transform: translateZ(0) translateY(-3px) scale(1.05);
     border-color: rgba(0, 212, 255, 1);
     color: rgba(93, 239, 255, 1);
     box-shadow: 
-        0 0 30px rgba(0, 212, 255, 0.9),
-        0 0 60px rgba(0, 212, 255, 0.7),
-        0 0 90px rgba(0, 212, 255, 0.5),
-        inset 0 0 30px rgba(0, 212, 255, 0.2);
+        0 0 20px rgba(0, 212, 255, 0.8),
+        0 0 40px rgba(0, 212, 255, 0.6);
     text-shadow: 
-        0 0 15px rgba(0, 212, 255, 1),
-        0 0 30px rgba(0, 212, 255, 0.8),
-        0 0 45px rgba(0, 212, 255, 0.6),
-        3px 3px 6px rgba(0, 0, 0, 0.9),
-        0 0 20px rgba(0, 0, 0, 1);
+        0 0 10px rgba(0, 212, 255, 0.9),
+        0 0 20px rgba(0, 212, 255, 0.7),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
     will-change: transform;
 }
 
