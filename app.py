@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from dotenv import load_dotenv
 import os
 import uuid
+import re
 from datetime import datetime
 
 # --- LOAD ENV SAFELY ---
@@ -85,7 +86,6 @@ def register():
         phone = request.form["phone"].strip()
         
         # Normalize Indian phone number: remove spaces, +, and ensure +91 prefix
-        import re
         phone_cleaned = re.sub(r'\D', '', phone)  # Remove all non-digits
         
         # Handle different input formats
