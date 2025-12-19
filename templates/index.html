@@ -1,22 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AFTER PARTY - Tunnel Racing Entry System</title>
+    <title>AFTER PARTY - Entry System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
     <!-- Unicorn Studio Animated Background -->
     <div id="unicorn-studio-background"></div>
-    <script src="https://unicorn-studio.com/embed.js"></script>
-    <script>
-        window.UnicornStudioEmbed = {
-            projectId: 'JETgWpEpJYLpUm9USYby',
-            container: 'unicorn-studio-background'
-        };
-    </script>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
     
     <nav class="navbar">
         <div class="navbar-content">
@@ -34,7 +29,7 @@
         <div class="hero">
             <div class="hero-content">
                 <h1>AFTER PARTY</h1>
-                <p>LIGHT-BEAM TUNNEL VERIFICATION SYSTEM</p>
+                <p>LIGHT-BEAM VERIFICATION SYSTEM</p>
                 <div class="hero-buttons">
                     <a href="/register" class="btn btn-primary">🎟️ GET YOUR TICKET</a>
                     <a href="/verify" class="btn btn-secondary">🔍 VERIFY ENTRY</a>
@@ -84,14 +79,14 @@
                 </div>
                 <div class="step-item">
                     <h3 class="step-title step-violet">🚀 STEP 4: ENTER</h3>
-                    <p>Present your QR code at the tunnel entrance portal.</p>
+                    <p>Present your QR code at the entrance portal.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <footer class="footer">
-        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM TUNNEL VERIFICATION SYSTEM</p>
+        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
     </footer>
 </body>
 </html>
