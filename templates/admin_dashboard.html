@@ -29,9 +29,9 @@
     </nav>
 
     <div class="container">
-        <div style="margin: 2rem 0;">
-            <h1 style="margin-bottom: 0.5rem;">Admin Dashboard</h1>
-            <p style="color: var(--text-secondary);">Manage party registrations and verify entries</p>
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage party registrations and verify entries</p>
         </div>
 
         <!-- Statistics Cards -->
@@ -59,8 +59,8 @@
             <div class="card-header">
                 <h2>Add Authorized User</h2>
             </div>
-            <form method="POST" action="/admin/add" style="display: flex; gap: 1rem; align-items: end;">
-                <div class="form-group" style="flex: 1; margin: 0;">
+            <form method="POST" action="/admin/add" class="add-user-form">
+                <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" required 
                            placeholder="user@example.com">
@@ -141,7 +141,7 @@
     </div>
 
     <footer class="footer">
-        <p>&copy; 2024 AFTER PARTY. All rights reserved. | NEON TUNNEL SYSTEM</p>
+        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM TUNNEL SYSTEM</p>
     </footer>
 
     <script>

@@ -27,11 +27,11 @@
     </nav>
 
     <div class="container">
-        <div class="card" style="max-width: 500px; margin: 5rem auto;">
-            <div class="card-header" style="text-align: center;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+        <div class="card card-max-width">
+            <div class="card-header card-center">
+                <div class="login-icon">🔐</div>
                 <h2>Admin Login</h2>
-                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Access the admin dashboard</p>
+                <p class="card-subtitle">Access the admin dashboard</p>
             </div>
 
             {% if error %}
@@ -56,14 +56,14 @@
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
 
-            <div style="margin-top: 2rem; text-align: center;">
-                <a href="/" style="color: var(--primary-color);">← Back to Home</a>
+            <div class="card-footer">
+                <a href="/" class="back-link">← Back to Home</a>
             </div>
         </div>
     </div>
 
     <footer class="footer">
-        <p>&copy; 2024 AFTER PARTY. All rights reserved. | NEON TUNNEL SYSTEM</p>
+        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM TUNNEL SYSTEM</p>
     </footer>
 </body>
 </html>
