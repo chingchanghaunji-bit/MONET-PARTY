@@ -82,7 +82,23 @@ def register():
     if request.method == "POST":
         email = request.form["email"].strip().lower()
         name = request.form["name"]
-        phone = request.form["phone"]
+        phone = request.form["phone"].strip()
+        
+        # Normalize Indian phone number: remove spaces, +, and ensure +91 prefix
+        import re
+        phone_cleaned = re.sub(r'\D', '', phone)  # Remove all non-digits
+        
+        # Handle different input formats
+        if phone_cleaned.startswith('91') and len(phone_cleaned) == 12:
+            phone_cleaned = phone_cleaned[2:]  # Remove country code if present
+        
+        # Format as Indian number: +91 XXXXX XXXXX
+        if len(phone_cleaned) == 10:
+            phone = f"+91 {phone_cleaned[:5]} {phone_cleaned[5:]}"
+        elif len(phone_cleaned) > 0:
+            # If invalid length, show error
+            if len(phone_cleaned) != 10:
+                return render_template("register.html", error="Please enter a valid 10-digit Indian mobile number (e.g., +91 98765 43210)")
 
         user = get_user(email=email)
         if not user:
