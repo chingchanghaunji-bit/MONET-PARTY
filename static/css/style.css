@@ -771,14 +771,13 @@ a, button, input, select, textarea, .btn {
 }
 
 .btn-danger {
-    border-color: #ff6600;
-    color: #ff6600;
-    box-shadow: 
-        0 0 20px rgba(255, 102, 0, 0.6),
-        inset 0 0 20px rgba(255, 102, 0, 0.1);
+    border-color: var(--spectral-violet);
+    color: var(--text-primary);
+    box-shadow: var(--glow-spectral);
     text-shadow: 
-        0 0 10px rgba(255, 102, 0, 0.8),
-        0 0 20px rgba(255, 102, 0, 0.6);
+        0 0 8px rgba(139, 108, 255, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    background: rgba(139, 108, 255, 0.1);
 }
 
 .btn-block {
@@ -835,18 +834,16 @@ a, button, input, select, textarea, .btn {
 
 .stat-value {
     font-size: 3.5rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, rgba(157, 0, 255, 1) 0%, rgba(0, 153, 255, 1) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-weight: 700;
+    color: var(--text-primary);
     position: relative;
     z-index: 1;
     text-shadow: 
-        0 0 30px rgba(157, 0, 255, 0.8),
-        0 0 60px rgba(0, 153, 255, 0.6);
-    animation: numberPulse 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 20px rgba(157, 0, 255, 0.8));
+        0 0 10px rgba(91, 124, 255, 0.5),
+        0 0 20px rgba(139, 108, 255, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: none;
+    filter: none;
 }
 
 @keyframes numberPulse {
@@ -1122,11 +1119,12 @@ tr:hover {
 .feature-icon {
     font-size: 5rem;
     margin-bottom: 1.5rem;
-    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.8));
-    animation: iconFloat 3s ease-in-out infinite;
+    filter: none;
+    animation: iconFloat 4s ease-in-out infinite;
     text-shadow: 
-        0 0 20px rgba(0, 255, 255, 0.8),
-        0 0 40px rgba(255, 0, 255, 0.6);
+        0 0 15px rgba(77, 227, 255, 0.4),
+        0 0 30px rgba(91, 124, 255, 0.3);
+    opacity: 0.9;
 }
 
 @keyframes iconFloat {
