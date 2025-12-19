@@ -84,3 +84,4 @@ MAIL_PASSWORD = xsmtpib-your-smtp-key-here
 
 **🎯 You're all set! Use these settings when deploying to Render.com**
 
+

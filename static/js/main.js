@@ -262,3 +262,92 @@ function downloadQR(ticketId) {
     link.click();
 }
 
+// Cursor Trail Effect
+(function() {
+    const trailContainer = document.createElement('div');
+    trailContainer.id = 'cursor-trail';
+    document.body.appendChild(trailContainer);
+    
+    const trail = [];
+    const trailLength = 20;
+    let mouseX = 0;
+    let mouseY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    
+    // Create trail particles
+    for (let i = 0; i < trailLength; i++) {
+        const particle = document.createElement('div');
+        particle.style.cssText = `
+            position: fixed;
+            width: ${8 - i * 0.3}px;
+            height: ${8 - i * 0.3}px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(${157 - i * 5}, ${0 + i * 2}, ${255 - i * 3}, ${1 - i * 0.04}) 0%,
+                rgba(${0 + i * 3}, ${153 - i * 5}, ${255 - i * 2}, ${0.8 - i * 0.03}) 50%,
+                transparent 100%
+            );
+            pointer-events: none;
+            z-index: 9997;
+            box-shadow: 
+                0 0 ${10 + i * 2}px rgba(157, 0, 255, ${0.8 - i * 0.03}),
+                0 0 ${20 + i * 3}px rgba(0, 153, 255, ${0.6 - i * 0.02});
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+            opacity: ${1 - i * 0.05};
+        `;
+        trail.push({
+            element: particle,
+            x: 0,
+            y: 0
+        });
+        trailContainer.appendChild(particle);
+    }
+    
+    // Update trail on mouse move
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+    
+    // Animate trail
+    function animateTrail() {
+        let currentX = mouseX;
+        let currentY = mouseY;
+        
+        trail.forEach((particle, index) => {
+            const nextIndex = index === 0 ? 0 : index - 1;
+            const nextParticle = trail[nextIndex];
+            
+            if (index === 0) {
+                particle.x = currentX;
+                particle.y = currentY;
+            } else {
+                const dx = nextParticle.x - particle.x;
+                const dy = nextParticle.y - particle.y;
+                particle.x += dx * 0.3;
+                particle.y += dy * 0.3;
+            }
+            
+            particle.element.style.transform = `translate(${particle.x - particle.element.offsetWidth / 2}px, ${particle.y - particle.element.offsetHeight / 2}px)`;
+        });
+        
+        requestAnimationFrame(animateTrail);
+    }
+    
+    animateTrail();
+    
+    // Hide trail when mouse leaves window
+    document.addEventListener('mouseleave', () => {
+        trail.forEach(particle => {
+            particle.element.style.opacity = '0';
+        });
+    });
+    
+    document.addEventListener('mouseenter', () => {
+        trail.forEach((particle, index) => {
+            particle.element.style.opacity = `${1 - index * 0.05}`;
+        });
+    });
+})();
+
