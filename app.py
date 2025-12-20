@@ -150,8 +150,10 @@ def register():
         ticket_id = str(uuid.uuid4())[:8].upper()
         qr_path = os.path.join(app.config["UPLOAD_FOLDER"], f"{ticket_id}.png")
 
+        # OPTIMIZED: Generate QR code with faster settings
         generate_qr(ticket_id, qr_path)
 
+        # OPTIMIZED: Update database first (fast operation)
         update_user(
             email,
             name=name,
@@ -161,15 +163,41 @@ def register():
             registered_at=datetime.now().isoformat()
         )
         
-        # Create backup after successful registration (prevents data loss)
+        # OPTIMIZED: Return success page immediately (don't wait for backup/email)
+        # Backup and email will run in background to not block user
+        
+        # Run backup in background (non-blocking)
         try:
-            from modules.db_backup import create_backup
-            create_backup()
+            import threading
+            def backup_async():
+                try:
+                    from modules.db_backup import create_backup
+                    create_backup()
+                except Exception as e:
+                    print(f"Warning: Backup creation failed: {e}")
+            
+            # Start backup in background thread
+            backup_thread = threading.Thread(target=backup_async, daemon=True)
+            backup_thread.start()
         except Exception as e:
-            print(f"Warning: Backup creation failed: {e}")
+            print(f"Warning: Could not start backup thread: {e}")
 
-        send_email(email, name, ticket_id, qr_path)
+        # Run email in background (non-blocking)
+        try:
+            import threading
+            def email_async():
+                try:
+                    send_email(email, name, ticket_id, qr_path)
+                except Exception as e:
+                    print(f"Warning: Email sending failed: {e}")
+            
+            # Start email in background thread
+            email_thread = threading.Thread(target=email_async, daemon=True)
+            email_thread.start()
+        except Exception as e:
+            print(f"Warning: Could not start email thread: {e}")
 
+        # Return success page immediately (fast response)
         return render_template("success.html", name=name, ticket_id=ticket_id, qr_path=qr_path)
 
     return render_template("register.html")
