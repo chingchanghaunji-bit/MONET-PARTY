@@ -366,6 +366,105 @@ def export_data():
     return response
 
 
+@app.route("/admin/export/excel")
+@login_required
+def export_data_excel():
+    """Export all registered user data as Excel file (.xlsx)"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError:
+        return "Excel export requires openpyxl. Please install it: pip install openpyxl", 500
+    
+    users = fetch_all_users()
+    
+    # Create workbook and worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Party Registrations"
+    
+    # Define styles
+    header_fill = PatternFill(start_color="6366f1", end_color="6366f1", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center')
+    
+    # Header row
+    headers = [
+        'S.No.', 'Email', 'Name', 'Phone', 'Ticket ID', 
+        'Registered', 'Verified', 'Created At', 'Registered At', 'Verified At'
+    ]
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+        cell.border = border
+    
+    # Data rows
+    for idx, user in enumerate(users, 1):
+        row_num = idx + 1
+        email = user[0] or 'N/A'
+        name = user[1] or 'N/A'
+        phone = user[2] or 'N/A'
+        registered = 'Yes' if user[3] == 1 else 'No'
+        ticket_id = user[4] or 'N/A'
+        verified = 'Yes' if user[5] == 1 else 'No'
+        created_at = user[6][:19] if user[6] else 'N/A'
+        registered_at = user[7][:19] if user[7] else 'N/A'
+        verified_at = user[8][:19] if user[8] else 'N/A'
+        
+        row_data = [
+            idx, email, name, phone, ticket_id,
+            registered, verified, created_at, registered_at, verified_at
+        ]
+        
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
+            cell.border = border
+            if col_num == 1:  # S.No. column
+                cell.alignment = center_align
+    
+    # Auto-adjust column widths
+    for col_num in range(1, len(headers) + 1):
+        column_letter = get_column_letter(col_num)
+        max_length = 0
+        for row in ws[column_letter]:
+            try:
+                if len(str(row.value)) > max_length:
+                    max_length = len(str(row.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Add summary info
+    ws.cell(row=len(users) + 3, column=1).value = f"Total Records: {len(users)}"
+    ws.cell(row=len(users) + 4, column=1).value = f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    
+    # Save to bytes
+    excel_io = io.BytesIO()
+    wb.save(excel_io)
+    excel_io.seek(0)
+    
+    return Response(
+        excel_io,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={
+            'Content-Disposition': f'attachment; filename=party_registrations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        }
+    )
+
+
 # ---------------------------------------------------
 # RUN APP
 # ---------------------------------------------------

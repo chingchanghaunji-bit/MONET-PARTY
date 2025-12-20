@@ -50,12 +50,24 @@
 
         <!-- Action Buttons -->
         <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2 style="margin: 0;">Actions</h2>
-                <a href="/admin/export" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                    <span>📥</span>
-                    <span>Download All Data</span>
-                </a>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="/admin/export/excel" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📊</span>
+                        <span>Download Excel</span>
+                    </a>
+                    <a href="/admin/export" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📄</span>
+                        <span>Download Text File</span>
+                    </a>
+                </div>
+            </div>
+            <div style="padding: 1rem; background: var(--card-bg); border-top: 1px solid var(--border-color);">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong>📁 Data Storage Location:</strong> Your data is stored in <code>database.db</code> file in the project root directory.
+                    <br>You can export all data using the buttons above to view in Excel or text format.
+                </p>
             </div>
         </div>
 
@@ -83,12 +95,18 @@
 
         <!-- Users Table -->
         <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2 style="margin: 0;">All Users</h2>
-                <a href="/admin/export" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                    <span>📥</span>
-                    <span>Export Data</span>
-                </a>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="/admin/export/excel" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📊</span>
+                        <span>Excel</span>
+                    </a>
+                    <a href="/admin/export" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📄</span>
+                        <span>Text</span>
+                    </a>
+                </div>
             </div>
             <div class="table-container">
                 <table id="users-table">
