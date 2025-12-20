@@ -52,8 +52,8 @@ python run.py
 ```
 
 6. Open your browser:
-- Home: http://localhost:5000
-- Admin: http://localhost:5000/admin/login
+- Home: http://localhost:10000
+- Admin: http://localhost:10000/admin/login
   - Username: `admin`
   - Password: `admin123`
 
