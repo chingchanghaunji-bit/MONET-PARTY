@@ -4,6 +4,7 @@ import os
 import uuid
 import re
 import secrets
+import io
 from datetime import datetime
 
 # --- LOAD ENV SAFELY ---
@@ -225,6 +226,89 @@ def api_search():
     users = fetch_all_users()
     filtered = [u for u in users if query in str(u).lower()]
     return jsonify(filtered)
+
+
+@app.route("/download/ticket/<ticket_id>")
+def download_ticket(ticket_id):
+    """Download full ticket (QR code + ticket ID) as image"""
+    from PIL import Image, ImageDraw, ImageFont
+    
+    try:
+        # Load QR code image
+        qr_path = os.path.join(app.config["UPLOAD_FOLDER"], f"{ticket_id}.png")
+        if not os.path.exists(qr_path):
+            return "Ticket not found", 404
+        
+        qr_img = Image.open(qr_path)
+        
+        # Get user info
+        user = get_user(ticket_id=ticket_id)
+        if not user:
+            return "User not found", 404
+        
+        name = user.get("name", "Guest")
+        
+        # Create full ticket image
+        ticket_width = 600
+        ticket_height = 800
+        ticket_img = Image.new('RGB', (ticket_width, ticket_height), color='#1a1a2e')
+        draw = ImageDraw.Draw(ticket_img)
+        
+        # Try to load a font, fallback to default if not available
+        try:
+            title_font = ImageFont.truetype("arial.ttf", 24)
+            subtitle_font = ImageFont.truetype("arial.ttf", 16)
+            ticket_font = ImageFont.truetype("arial.ttf", 32)
+            text_font = ImageFont.truetype("arial.ttf", 18)
+            small_font = ImageFont.truetype("arial.ttf", 12)
+        except:
+            title_font = ImageFont.load_default()
+            subtitle_font = ImageFont.load_default()
+            ticket_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+            small_font = ImageFont.load_default()
+        
+        # Draw header
+        draw.rectangle([(0, 0), (ticket_width, 80)], fill='#6366f1')
+        draw.text((ticket_width/2, 35), "AFTER PARTY - ENTRY TICKET", fill='white', font=title_font, anchor='mm')
+        draw.text((ticket_width/2, 60), "Registration Successful", fill='white', font=subtitle_font, anchor='mm')
+        
+        # Resize and paste QR code
+        qr_size = 300
+        qr_resized = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
+        ticket_img.paste(qr_resized, ((ticket_width - qr_size) // 2, 120))
+        
+        # Draw ticket ID
+        draw.text((ticket_width/2, 460), "Ticket ID:", fill='white', font=text_font, anchor='mm')
+        draw.text((ticket_width/2, 500), ticket_id, fill='#6366f1', font=ticket_font, anchor='mm')
+        
+        # Draw name
+        draw.text((ticket_width/2, 540), f"Name: {name}", fill='white', font=text_font, anchor='mm')
+        
+        # Draw warning
+        draw.text((ticket_width/2, 580), "⚠️ IMPORTANT WARNING", fill='#ff9800', font=text_font, anchor='mm')
+        draw.text((ticket_width/2, 600), "Loss of this code will lead to loss of pass", fill='white', font=small_font, anchor='mm')
+        draw.text((ticket_width/2, 620), "NO REFUND will be provided in case of misuse", fill='white', font=small_font, anchor='mm')
+        
+        # Draw footer
+        draw.text((ticket_width/2, 750), f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", fill='#888888', font=small_font, anchor='mm')
+        draw.text((ticket_width/2, 770), "© 2024 AFTER PARTY - LIGHT-BEAM VERIFICATION SYSTEM", fill='#888888', font=small_font, anchor='mm')
+        
+        # Save to bytes
+        img_io = io.BytesIO()
+        ticket_img.save(img_io, 'PNG')
+        img_io.seek(0)
+        
+        return Response(
+            img_io,
+            mimetype='image/png',
+            headers={
+                'Content-Disposition': f'attachment; filename=Full_Ticket_{ticket_id}.png'
+            }
+        )
+    except Exception as e:
+        print(f"Error generating ticket: {e}")
+        return "Error generating ticket", 500
 
 
 @app.route("/admin/export")
