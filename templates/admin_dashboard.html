@@ -46,50 +46,45 @@
             <div style="padding: 1rem;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                     <div>
-                        <strong>Database Path:</strong>
-                        <code style="display: block; margin-top: 0.25rem; font-size: 0.85rem; word-break: break-all;">{{ db_info.absolute_path if db_info else 'N/A' }}</code>
+                        <strong>Database Type:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            <span class="badge badge-success">✅ PostgreSQL</span>
+                        </span>
                     </div>
                     <div>
-                        <strong>Database Status:</strong>
+                        <strong>Connection Status:</strong>
                         <span style="display: block; margin-top: 0.25rem;">
-                            {% if db_info and db_info.exists %}
-                                <span class="badge badge-success">✅ Active</span>
+                            {% if db_info and db_info.pool_active %}
+                                <span class="badge badge-success">✅ Connected</span>
                             {% else %}
-                                <span class="badge badge-danger">❌ Not Found</span>
+                                <span class="badge badge-danger">❌ Not Connected</span>
                             {% endif %}
                         </span>
                     </div>
                     <div>
-                        <strong>Backups Available:</strong>
+                        <strong>Storage:</strong>
                         <span style="display: block; margin-top: 0.25rem;">
-                            <span class="badge badge-info">{{ db_info.backup_count if db_info else 0 }} backups</span>
-                            {% if db_info and db_info.latest_backup %}
-                                <br><small style="color: var(--text-secondary);">Latest: {{ db_info.latest_backup.filename }}</small>
-                            {% endif %}
+                            <span class="badge badge-success">✅ Persistent</span>
                         </span>
                     </div>
                     <div>
-                        <strong>Storage Type:</strong>
+                        <strong>Environment:</strong>
                         <span style="display: block; margin-top: 0.25rem;">
                             {% if db_info and db_info.is_render %}
-                                {% if db_info.using_default_path %}
-                                    <span class="badge badge-warning">⚠️ Ephemeral (Will be lost on restart)</span>
-                                {% else %}
-                                    <span class="badge badge-success">✅ Persistent Disk</span>
-                                {% endif %}
+                                <span class="badge badge-info">Render</span>
                             {% else %}
-                                <span class="badge badge-info">Local Storage</span>
+                                <span class="badge badge-info">Local</span>
                             {% endif %}
                         </span>
                     </div>
                 </div>
-                {% if db_info and db_info.is_render and db_info.using_default_path %}
-                <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem; border-radius: 4px; margin: 0;">
-                    <strong>⚠️ Important:</strong> You're using default database path on Render. Set <code>DB_PATH</code> environment variable to <code>/opt/render/project/src/database.db</code> for persistent storage. Auto-backup is enabled, so data can be restored from backups.
-                </div>
-                {% elif db_info and db_info.is_render and not db_info.using_default_path %}
+                {% if db_info and db_info.url and db_info.url != 'Not configured' %}
                 <div class="alert alert-success" style="background-color: #d4edda; border: 1px solid #28a745; padding: 0.75rem; border-radius: 4px; margin: 0;">
-                    <strong>✅ Good:</strong> Using persistent disk storage. Data will persist across restarts. Auto-backup is enabled for additional safety.
+                    <strong>✅ PostgreSQL Connected:</strong> Your data is stored in PostgreSQL and will persist across redeploys, restarts, and crashes. Render automatically backs up PostgreSQL databases.
+                </div>
+                {% else %}
+                <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem; border-radius: 4px; margin: 0;">
+                    <strong>⚠️ DATABASE_URL Not Set:</strong> Please create a PostgreSQL database in Render and set the <code>DATABASE_URL</code> environment variable.
                 </div>
                 {% endif %}
             </div>

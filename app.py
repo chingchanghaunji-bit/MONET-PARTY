@@ -77,52 +77,31 @@ app.config["MAIL_USE_SSL"] = os.getenv("MAIL_USE_SSL") == "True"
 init_mail(app)
 
 # ---------------------------------------------------
-# INITIALIZE DATABASE
+# INITIALIZE DATABASE (PostgreSQL)
 # ---------------------------------------------------
-# FIXED: Add logging for database path and persistence warnings
-from modules.db_handler import DB_PATH
-print(f"📁 Database path: {DB_PATH}")
-print(f"📁 Database absolute path: {os.path.abspath(DB_PATH)}")
-print(f"📁 Database exists: {os.path.exists(DB_PATH)}")
+# Verify DATABASE_URL is set
+DATABASE_URL = os.getenv('DATABASE_URL')
+if not DATABASE_URL:
+    print("⚠️  WARNING: DATABASE_URL environment variable not set!")
+    print("⚠️  Please create a PostgreSQL database in Render and set DATABASE_URL")
+    print("⚠️  The app will fail to start without a valid DATABASE_URL")
+else:
+    print("✅ DATABASE_URL found - connecting to PostgreSQL")
+    # Mask password in logs for security
+    safe_url = DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else DATABASE_URL
+    print(f"📁 Database: {safe_url}")
 
-# Check if we're on Render and using default path (ephemeral storage warning)
-if os.getenv('RENDER') and DB_PATH == 'database.db':
-    print("⚠️  WARNING: Using default database path on Render!")
-    print("⚠️  Render uses ephemeral filesystem - database will be wiped on restart/redeploy!")
-    print("⚠️  SOLUTION: Set DB_PATH environment variable to use persistent disk storage")
-    print("⚠️  Example: DB_PATH=/opt/render/project/src/database.db")
-
-init_db()
-
-# Initialize database backup system with auto-restore
-from modules.db_backup import create_backup, ensure_backup_dir, auto_restore_from_backup
-ensure_backup_dir()
-
-# FIXED: Auto-restore from backup if database is missing (critical for Render persistence)
-if not os.path.exists(DB_PATH):
-    print("⚠️  Database file not found! Attempting auto-restore from backup...")
-    restored, message = auto_restore_from_backup()
-    if restored:
-        print(f"✅ {message}")
-        # Re-initialize database after restore
-        init_db()
-    else:
-        print(f"⚠️  {message}")
-        print("📝 Starting with empty database")
-
-# Create backup on startup (if database exists and has data)
+# Initialize PostgreSQL database
 try:
+    init_db()
     from modules.db_handler import get_stats
     stats = get_stats()
     print(f"📊 Database stats on startup: {stats}")
-    if stats['total'] > 0:
-        backup_path = create_backup()  # Create backup on startup if there's data
-        if backup_path:
-            print(f"✅ Startup backup created: {backup_path}")
-        else:
-            print("⚠️  Failed to create startup backup")
+    print("✅ PostgreSQL database initialized successfully")
 except Exception as e:
-    print(f"⚠️  Error during startup backup: {e}")
+    print(f"❌ Error initializing PostgreSQL database: {e}")
+    print("⚠️  Make sure DATABASE_URL is set correctly in Render environment variables")
+    raise
 
 
 # ---------------------------------------------------
@@ -282,19 +261,15 @@ def admin_dashboard():
         # Add user count to stats for display
         stats['displayed_count'] = len(users)
         
-        # Add database path info for debugging
-        from modules.db_handler import DB_PATH
-        from modules.db_backup import list_backups
+        # Add database info for PostgreSQL
+        from modules.db_handler import get_connection_pool, DATABASE_URL
         import os
-        backups = list_backups()
         db_info = {
-            'path': DB_PATH,
-            'absolute_path': os.path.abspath(DB_PATH),
-            'exists': os.path.exists(DB_PATH),
+            'type': 'PostgreSQL',
+            'url': DATABASE_URL or 'Not configured',
             'is_render': os.getenv('RENDER') is not None,
-            'using_default_path': DB_PATH == 'database.db',
-            'backup_count': len(backups),
-            'latest_backup': backups[0] if backups else None
+            'pool_active': get_connection_pool() is not None,
+            'connection_status': 'Connected' if get_connection_pool() else 'Not connected'
         }
         
         return render_template("admin_dashboard.html", users=users, stats=stats, db_info=db_info)
@@ -311,7 +286,6 @@ def admin_dashboard():
 def add_allowed():
     email = request.form["email"].strip().lower()
     add_user(email)
-    # Note: add_user() now automatically creates backup
     flash(f"User {email} added successfully!", "success")
     return redirect(url_for("admin_dashboard"))
 
@@ -398,38 +372,24 @@ def delete_user_admin(email):
 @app.route("/admin/backup")
 @login_required
 def admin_backup():
-    """Create manual backup and show backup info"""
-    from modules.db_backup import create_backup, list_backups, get_database_info
-    
-    # Create new backup
-    backup_path = create_backup()
-    
-    # Get database info
-    db_info = get_database_info()
-    backups = list_backups()
-    
-    return render_template("admin_backup.html", 
-                         backup_created=backup_path is not None,
-                         db_info=db_info,
-                         backups=backups)
-
-
-@app.route("/admin/restore/<backup_filename>")
-@login_required
-def admin_restore(backup_filename):
-    """Restore database from backup"""
-    from modules.db_backup import restore_backup, list_backups
+    """Database backup info - PostgreSQL handles backups automatically"""
+    from modules.db_handler import get_stats, get_connection_pool
     import os
     
-    backup_path = os.path.join('database_backups', backup_filename)
-    success, message = restore_backup(backup_path)
+    stats = get_stats()
+    db_info = {
+        'type': 'PostgreSQL',
+        'url': os.getenv('DATABASE_URL', 'Not set'),
+        'stats': stats,
+        'pool_status': 'Active' if get_connection_pool() else 'Inactive'
+    }
     
-    if success:
-        flash(f"✅ {message}", "success")
-    else:
-        flash(f"❌ {message}", "error")
-    
-    return redirect(url_for("admin_backup"))
+    # PostgreSQL on Render has automatic backups, no manual backup needed
+    return render_template("admin_backup.html", 
+                         backup_created=False,
+                         db_info=db_info,
+                         backups=[],
+                         is_postgresql=True)
 
 @app.route("/api/stats")
 @login_required
@@ -683,6 +643,20 @@ def export_data_excel():
 
 
 # ---------------------------------------------------
+# GRACEFUL SHUTDOWN
+# ---------------------------------------------------
+import atexit
+def close_db_pool():
+    """Close database connection pool on shutdown"""
+    try:
+        from modules.db_handler import close_pool
+        close_pool()
+    except:
+        pass
+
+atexit.register(close_db_pool)
+
+# ---------------------------------------------------
 # RUN APP
 # ---------------------------------------------------
 if __name__ == "__main__":
@@ -709,6 +683,7 @@ if __name__ == "__main__":
         print("\n✅ Admin credentials loaded from environment variables")
     
     print("\n🚀 Starting Party Entry System...")
+    print("🐘 Using PostgreSQL database (persistent storage)")
     port = int(os.environ.get("PORT", 10000))
     print(f"📍 Server running on port: {port}")
     print("🔐 Admin login: /admin/login")

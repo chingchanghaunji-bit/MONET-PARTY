@@ -1,141 +1,313 @@
+"""
+PostgreSQL Database Handler
+Uses connection pooling and graceful reconnection for production stability
+"""
 
-import sqlite3
 import os
+import psycopg2
+from psycopg2 import pool, sql
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
+import time
 
-# FIXED: Use environment variable for database path to support persistent storage on Render
-# On Render, you can set DB_PATH environment variable to use persistent disk storage
-# Example: DB_PATH=/opt/render/project/src/database.db (for persistent disk)
-# Or use a cloud database service for better persistence
-DB_PATH = os.getenv('DB_PATH', 'database.db')
+# Get DATABASE_URL from environment (required for Render PostgreSQL)
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS allowed (
-                    email TEXT PRIMARY KEY,
-                    name TEXT,
-                    phone TEXT,
-                    registered INTEGER DEFAULT 0,
-                    ticket_id TEXT,
-                    verified INTEGER DEFAULT 0,
-                    created_at TEXT,
-                    registered_at TEXT,
-                    verified_at TEXT
-                )""")
-    
-    # Add missing columns if they don't exist (for existing databases)
-    try:
-        c.execute("ALTER TABLE allowed ADD COLUMN created_at TEXT")
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-    
-    try:
-        c.execute("ALTER TABLE allowed ADD COLUMN registered_at TEXT")
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-    
-    try:
-        c.execute("ALTER TABLE allowed ADD COLUMN verified_at TEXT")
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-    
-    conn.commit()
-    conn.close()
+# Connection pool for production
+_connection_pool = None
 
-def get_user(email=None, ticket_id=None):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    if email:
-        c.execute("SELECT * FROM allowed WHERE email=?", (email,))
-    else:
-        c.execute("SELECT * FROM allowed WHERE ticket_id=?", (ticket_id,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return {
-            "email": row[0],
-            "name": row[1],
-            "phone": row[2],
-            "registered": row[3],
-            "ticket_id": row[4],
-            "verified": row[5],
-            "created_at": row[6] if len(row) > 6 else None,
-            "registered_at": row[7] if len(row) > 7 else None,
-            "verified_at": row[8] if len(row) > 8 else None
-        }
+def get_connection_pool():
+    """Get or create connection pool - singleton pattern"""
+    global _connection_pool
+    if _connection_pool is None:
+        if not DATABASE_URL:
+            raise ValueError("DATABASE_URL environment variable is required. Set it in Render dashboard.")
+        
+        try:
+            # Parse DATABASE_URL and create connection pool
+            # Pool size: min 1, max 5 connections
+            _connection_pool = psycopg2.pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=5,
+                dsn=DATABASE_URL
+            )
+            print("✅ PostgreSQL connection pool created")
+        except Exception as e:
+            print(f"❌ Error creating connection pool: {e}")
+            raise
+    return _connection_pool
+
+def get_connection():
+    """Get a connection from the pool with retry logic"""
+    pool = get_connection_pool()
+    max_retries = 3
+    retry_delay = 1
+    
+    for attempt in range(max_retries):
+        try:
+            conn = pool.getconn()
+            # Test connection
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            return conn
+        except (psycopg2.OperationalError, psycopg2.InterfaceError) as e:
+            print(f"⚠️ Connection error (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                raise
     return None
 
-def add_user(email):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    now = datetime.now().isoformat()
-    c.execute("INSERT OR IGNORE INTO allowed (email, created_at) VALUES (?, ?)", (email, now))
-    conn.commit()
-    conn.close()
-    # Automatic backup after adding user
-    _auto_backup()
+def return_connection(conn):
+    """Return connection to pool"""
+    if conn and _connection_pool:
+        try:
+            _connection_pool.putconn(conn)
+        except Exception as e:
+            print(f"⚠️ Error returning connection to pool: {e}")
 
-def _auto_backup():
-    """Internal function to create automatic backup after database changes"""
+def init_db():
+    """Initialize database - create table if it doesn't exist (DO NOT recreate on every restart)"""
+    conn = None
     try:
-        from modules.db_backup import create_backup
-        create_backup()
+        conn = get_connection()
+        with conn.cursor() as cur:
+            # Create table only if it doesn't exist
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS allowed (
+                    email VARCHAR(255) PRIMARY KEY,
+                    name VARCHAR(255),
+                    phone VARCHAR(50),
+                    registered INTEGER DEFAULT 0,
+                    ticket_id VARCHAR(50),
+                    verified INTEGER DEFAULT 0,
+                    created_at TIMESTAMP,
+                    registered_at TIMESTAMP,
+                    verified_at TIMESTAMP
+                )
+            """)
+            
+            # Add missing columns if they don't exist (for existing databases)
+            # PostgreSQL doesn't support IF NOT EXISTS for ALTER TABLE, so we check first
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='allowed' AND column_name='created_at'
+            """)
+            if not cur.fetchone():
+                cur.execute("ALTER TABLE allowed ADD COLUMN created_at TIMESTAMP")
+            
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='allowed' AND column_name='registered_at'
+            """)
+            if not cur.fetchone():
+                cur.execute("ALTER TABLE allowed ADD COLUMN registered_at TIMESTAMP")
+            
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='allowed' AND column_name='verified_at'
+            """)
+            if not cur.fetchone():
+                cur.execute("ALTER TABLE allowed ADD COLUMN verified_at TIMESTAMP")
+            
+            conn.commit()
+            print("✅ Database initialized (table exists or created)")
     except Exception as e:
-        print(f"⚠️ Auto-backup failed: {e}")
+        if conn:
+            conn.rollback()
+        print(f"❌ Error initializing database: {e}")
+        raise
+    finally:
+        if conn:
+            return_connection(conn)
+
+def get_user(email=None, ticket_id=None):
+    """Get user by email or ticket_id"""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            if email:
+                cur.execute("SELECT * FROM allowed WHERE email = %s", (email,))
+            elif ticket_id:
+                cur.execute("SELECT * FROM allowed WHERE ticket_id = %s", (ticket_id,))
+            else:
+                return None
+            
+            row = cur.fetchone()
+            if row:
+                # Convert to regular dict and handle timestamp conversion
+                result = dict(row)
+                # Convert timestamps to ISO format strings for compatibility
+                for key in ['created_at', 'registered_at', 'verified_at']:
+                    if result.get(key) and hasattr(result[key], 'isoformat'):
+                        result[key] = result[key].isoformat()
+                return result
+            return None
+    except Exception as e:
+        print(f"❌ Error getting user: {e}")
+        return None
+    finally:
+        if conn:
+            return_connection(conn)
+
+def add_user(email):
+    """Add a new user"""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            now = datetime.now()
+            cur.execute(
+                "INSERT INTO allowed (email, created_at) VALUES (%s, %s) ON CONFLICT (email) DO NOTHING",
+                (email, now)
+            )
+            conn.commit()
+            print(f"✅ User added: {email}")
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error adding user: {e}")
+        raise
+    finally:
+        if conn:
+            return_connection(conn)
 
 def update_user(email, **kwargs):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    for key, value in kwargs.items():
-        c.execute(f"UPDATE allowed SET {key}=? WHERE email=?", (value, email))
-    conn.commit()
-    conn.close()
-    # Automatic backup after updating user
-    _auto_backup()
+    """Update user fields"""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            # Build dynamic UPDATE query
+            updates = []
+            values = []
+            for key, value in kwargs.items():
+                # Convert ISO format strings to datetime for timestamp fields
+                if key in ['created_at', 'registered_at', 'verified_at'] and isinstance(value, str):
+                    try:
+                        value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                    except:
+                        pass
+                updates.append(f"{key} = %s")
+                values.append(value)
+            
+            if updates:
+                values.append(email)
+                query = f"UPDATE allowed SET {', '.join(updates)} WHERE email = %s"
+                cur.execute(query, values)
+                conn.commit()
+                print(f"✅ User updated: {email}")
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error updating user: {e}")
+        raise
+    finally:
+        if conn:
+            return_connection(conn)
 
 def fetch_all_users():
     """Fetch ALL users from database - NO LIMIT, supports up to 150+ users"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    # FIXED: Fetch ALL users without any LIMIT - ensures all data is preserved
-    # Check if created_at column exists, if not order by email
+    conn = None
     try:
-        # ORDER BY created_at DESC - newest first, but ALL records are returned
-        c.execute("SELECT * FROM allowed ORDER BY created_at DESC")
-    except sqlite3.OperationalError:
-        # Fallback if created_at doesn't exist
-        c.execute("SELECT * FROM allowed ORDER BY email")
-    rows = c.fetchall()  # fetchall() gets ALL rows - no limit applied
-    conn.close()
-    return rows
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT email, name, phone, registered, ticket_id, verified, 
+                       created_at, registered_at, verified_at
+                FROM allowed 
+                ORDER BY created_at DESC NULLS LAST, email ASC
+            """)
+            rows = cur.fetchall()
+            # Convert to list of tuples for compatibility with existing template code
+            # Template expects: (email, name, phone, registered, ticket_id, verified, created_at, registered_at, verified_at)
+            result = []
+            for row in rows:
+                # Convert timestamps to strings for template compatibility
+                result.append((
+                    row[0],  # email
+                    row[1],  # name
+                    row[2],  # phone
+                    row[3],  # registered
+                    row[4],  # ticket_id
+                    row[5],  # verified
+                    row[6].isoformat() if row[6] else None,  # created_at
+                    row[7].isoformat() if row[7] else None,  # registered_at
+                    row[8].isoformat() if row[8] else None   # verified_at
+                ))
+            return result
+    except Exception as e:
+        print(f"❌ Error fetching users: {e}")
+        return []
+    finally:
+        if conn:
+            return_connection(conn)
 
 def delete_user(email):
     """Delete a user from the database by email"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("DELETE FROM allowed WHERE email=?", (email,))
-    conn.commit()
-    deleted = c.rowcount > 0
-    conn.close()
-    # Automatic backup after deleting user
-    if deleted:
-        _auto_backup()
-    return deleted
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM allowed WHERE email = %s", (email,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            if deleted:
+                print(f"✅ User deleted: {email}")
+            return deleted
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"❌ Error deleting user: {e}")
+        return False
+    finally:
+        if conn:
+            return_connection(conn)
 
 def get_stats():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    
-    total = c.execute("SELECT COUNT(*) FROM allowed").fetchone()[0]
-    registered = c.execute("SELECT COUNT(*) FROM allowed WHERE registered=1").fetchone()[0]
-    verified = c.execute("SELECT COUNT(*) FROM allowed WHERE verified=1").fetchone()[0]
-    pending = total - registered
-    
-    conn.close()
-    return {
-        "total": total,
-        "registered": registered,
-        "verified": verified,
-        "pending": pending
-    }
+    """Get database statistics"""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM allowed")
+            total = cur.fetchone()[0]
+            
+            cur.execute("SELECT COUNT(*) FROM allowed WHERE registered = 1")
+            registered = cur.fetchone()[0]
+            
+            cur.execute("SELECT COUNT(*) FROM allowed WHERE verified = 1")
+            verified = cur.fetchone()[0]
+            
+            pending = total - registered
+            
+            return {
+                "total": total,
+                "registered": registered,
+                "verified": verified,
+                "pending": pending
+            }
+    except Exception as e:
+        print(f"❌ Error getting stats: {e}")
+        return {
+            "total": 0,
+            "registered": 0,
+            "verified": 0,
+            "pending": 0
+        }
+    finally:
+        if conn:
+            return_connection(conn)
+
+def close_pool():
+    """Close all connections in pool (for graceful shutdown)"""
+    global _connection_pool
+    if _connection_pool:
+        _connection_pool.closeall()
+        _connection_pool = None
+        print("✅ Connection pool closed")
