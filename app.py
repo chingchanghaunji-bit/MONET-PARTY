@@ -20,15 +20,21 @@ else:
     load_dotenv(override=False)
 
 # --- IMPORT DB FUNCTIONS ---
-from modules.db_handler import (
-    init_db,
-    get_user,
-    add_user,
-    update_user,
-    delete_user,
-    fetch_all_users,
-    get_stats
-)
+# PRODUCTION: PostgreSQL database handler (requires DATABASE_URL environment variable)
+try:
+    from modules.db_handler import (
+        init_db,
+        get_user,
+        add_user,
+        update_user,
+        delete_user,
+        fetch_all_users,
+        get_stats
+    )
+except ImportError as e:
+    print(f"❌ CRITICAL: Failed to import database handler: {e}")
+    print("❌ Make sure psycopg2-binary is installed and Python version is 3.11.9")
+    raise
 
 # --- QR + EMAIL ---
 from modules.qr_generator import generate_qr
@@ -79,28 +85,32 @@ init_mail(app)
 # ---------------------------------------------------
 # INITIALIZE DATABASE (PostgreSQL)
 # ---------------------------------------------------
-# Verify DATABASE_URL is set
+# PRODUCTION: Verify DATABASE_URL is set (required for Render PostgreSQL)
 DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
     print("⚠️  WARNING: DATABASE_URL environment variable not set!")
     print("⚠️  Please create a PostgreSQL database in Render and set DATABASE_URL")
     print("⚠️  The app will fail to start without a valid DATABASE_URL")
+    raise ValueError("DATABASE_URL environment variable is required. Set it in Render dashboard.")
 else:
     print("✅ DATABASE_URL found - connecting to PostgreSQL")
     # Mask password in logs for security
     safe_url = DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else DATABASE_URL
     print(f"📁 Database: {safe_url}")
 
-# Initialize PostgreSQL database
+# PRODUCTION: Initialize PostgreSQL database
+# Tables are created with IF NOT EXISTS - no data loss on restart
 try:
     init_db()
     from modules.db_handler import get_stats
     stats = get_stats()
     print(f"📊 Database stats on startup: {stats}")
     print("✅ PostgreSQL database initialized successfully")
+    print("✅ Tables use IF NOT EXISTS - data persists across redeploys")
 except Exception as e:
     print(f"❌ Error initializing PostgreSQL database: {e}")
     print("⚠️  Make sure DATABASE_URL is set correctly in Render environment variables")
+    print("⚠️  Verify PostgreSQL database is running and accessible")
     raise
 
 

@@ -1,14 +1,27 @@
 """
 PostgreSQL Database Handler
 Uses connection pooling and graceful reconnection for production stability
+
+PRODUCTION: Requires Python 3.11.9 (set in runtime.txt) for psycopg2-binary compatibility
 """
 
 import os
-import psycopg2
-from psycopg2 import pool, sql
-from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import time
+
+# PRODUCTION FIX: Import psycopg2 with clear error handling for Python version compatibility
+try:
+    import psycopg2
+    from psycopg2 import pool, sql
+    from psycopg2.extras import RealDictCursor
+except ImportError as e:
+    print(f"❌ CRITICAL: Failed to import psycopg2: {e}")
+    print("❌ This usually means Python version is incompatible (need Python 3.11.9)")
+    print("❌ Check runtime.txt is set to: python-3.11.9")
+    raise ImportError(
+        "psycopg2-binary requires Python 3.11.9. "
+        "Set runtime.txt to 'python-3.11.9' and redeploy."
+    ) from e
 
 # Get DATABASE_URL from environment (required for Render PostgreSQL)
 DATABASE_URL = os.getenv('DATABASE_URL')
