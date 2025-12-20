@@ -73,6 +73,16 @@ def add_user(email):
     c.execute("INSERT OR IGNORE INTO allowed (email, created_at) VALUES (?, ?)", (email, now))
     conn.commit()
     conn.close()
+    # Automatic backup after adding user
+    _auto_backup()
+
+def _auto_backup():
+    """Internal function to create automatic backup after database changes"""
+    try:
+        from modules.db_backup import create_backup
+        create_backup()
+    except Exception as e:
+        print(f"⚠️ Auto-backup failed: {e}")
 
 def update_user(email, **kwargs):
     conn = sqlite3.connect(DB_PATH)
@@ -81,6 +91,8 @@ def update_user(email, **kwargs):
         c.execute(f"UPDATE allowed SET {key}=? WHERE email=?", (value, email))
     conn.commit()
     conn.close()
+    # Automatic backup after updating user
+    _auto_backup()
 
 def fetch_all_users():
     """Fetch ALL users from database - NO LIMIT, supports up to 150+ users"""
@@ -106,6 +118,9 @@ def delete_user(email):
     conn.commit()
     deleted = c.rowcount > 0
     conn.close()
+    # Automatic backup after deleting user
+    if deleted:
+        _auto_backup()
     return deleted
 
 def get_stats():

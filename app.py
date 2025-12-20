@@ -94,9 +94,22 @@ if os.getenv('RENDER') and DB_PATH == 'database.db':
 
 init_db()
 
-# Initialize database backup system
-from modules.db_backup import create_backup, ensure_backup_dir
+# Initialize database backup system with auto-restore
+from modules.db_backup import create_backup, ensure_backup_dir, auto_restore_from_backup
 ensure_backup_dir()
+
+# FIXED: Auto-restore from backup if database is missing (critical for Render persistence)
+if not os.path.exists(DB_PATH):
+    print("⚠️  Database file not found! Attempting auto-restore from backup...")
+    restored, message = auto_restore_from_backup()
+    if restored:
+        print(f"✅ {message}")
+        # Re-initialize database after restore
+        init_db()
+    else:
+        print(f"⚠️  {message}")
+        print("📝 Starting with empty database")
+
 # Create backup on startup (if database exists and has data)
 try:
     from modules.db_handler import get_stats
@@ -173,6 +186,7 @@ def register():
         generate_qr(ticket_id, qr_path)
 
         # OPTIMIZED: Update database first (fast operation)
+        # Note: update_user() now automatically creates backup, so no need for separate backup thread
         update_user(
             email,
             name=name,
@@ -182,24 +196,7 @@ def register():
             registered_at=datetime.now().isoformat()
         )
         
-        # OPTIMIZED: Return success page immediately (don't wait for backup/email)
-        # Backup and email will run in background to not block user
-        
-        # Run backup in background (non-blocking)
-        try:
-            import threading
-            def backup_async():
-                try:
-                    from modules.db_backup import create_backup
-                    create_backup()
-                except Exception as e:
-                    print(f"Warning: Backup creation failed: {e}")
-            
-            # Start backup in background thread
-            backup_thread = threading.Thread(target=backup_async, daemon=True)
-            backup_thread.start()
-        except Exception as e:
-            print(f"Warning: Could not start backup thread: {e}")
+        # OPTIMIZED: Return success page immediately (backup is automatic, email runs in background)
 
         # Run email in background (non-blocking)
         try:
@@ -287,13 +284,17 @@ def admin_dashboard():
         
         # Add database path info for debugging
         from modules.db_handler import DB_PATH
+        from modules.db_backup import list_backups
         import os
+        backups = list_backups()
         db_info = {
             'path': DB_PATH,
             'absolute_path': os.path.abspath(DB_PATH),
             'exists': os.path.exists(DB_PATH),
             'is_render': os.getenv('RENDER') is not None,
-            'using_default_path': DB_PATH == 'database.db'
+            'using_default_path': DB_PATH == 'database.db',
+            'backup_count': len(backups),
+            'latest_backup': backups[0] if backups else None
         }
         
         return render_template("admin_dashboard.html", users=users, stats=stats, db_info=db_info)
@@ -310,12 +311,7 @@ def admin_dashboard():
 def add_allowed():
     email = request.form["email"].strip().lower()
     add_user(email)
-    # Create backup after adding user
-    try:
-        from modules.db_backup import create_backup
-        create_backup()
-    except:
-        pass
+    # Note: add_user() now automatically creates backup
     flash(f"User {email} added successfully!", "success")
     return redirect(url_for("admin_dashboard"))
 
@@ -369,13 +365,7 @@ def edit_user(email):
         
         # Update user
         update_user(email, **update_data)
-        
-        # Create backup after editing
-        try:
-            from modules.db_backup import create_backup
-            create_backup()
-        except:
-            pass
+        # Note: update_user() now automatically creates backup
         
         flash(f"User {email} updated successfully!", "success")
         return redirect(url_for("admin_dashboard"))
@@ -397,13 +387,7 @@ def delete_user_admin(email):
     deleted = delete_user(email)
     
     if deleted:
-        # Create backup after deletion
-        try:
-            from modules.db_backup import create_backup
-            create_backup()
-        except:
-            pass
-        
+        # Note: delete_user() now automatically creates backup
         flash(f"User {email} deleted successfully!", "success")
     else:
         flash(f"Failed to delete user {email}!", "error")

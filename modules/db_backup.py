@@ -12,6 +12,7 @@ from datetime import datetime
 # Import from db_handler or use environment variable
 DB_PATH = os.getenv('DB_PATH', 'database.db')
 BACKUP_DIR = os.getenv('BACKUP_DIR', 'database_backups')
+MAX_BACKUPS = int(os.getenv('MAX_BACKUPS', '10'))  # Keep last 10 backups
 
 def ensure_backup_dir():
     """Create backup directory if it doesn't exist"""
@@ -29,6 +30,8 @@ def create_backup():
         try:
             shutil.copy2(DB_PATH, backup_path)
             print(f"✅ Backup created: {backup_path}")
+            # Clean up old backups automatically
+            cleanup_old_backups()
             return backup_path
         except Exception as e:
             print(f"❌ Error creating backup: {e}")
@@ -36,6 +39,45 @@ def create_backup():
     else:
         print("⚠️ Database file not found, cannot create backup")
         return None
+
+def cleanup_old_backups():
+    """Automatically clean up old backups, keeping only the last MAX_BACKUPS"""
+    try:
+        backups = list_backups()
+        if len(backups) > MAX_BACKUPS:
+            # Sort by timestamp (oldest first)
+            backups_sorted = sorted(backups, key=lambda x: x['timestamp'])
+            # Delete oldest backups
+            to_delete = backups_sorted[:-MAX_BACKUPS]
+            for backup in to_delete:
+                try:
+                    os.remove(backup['path'])
+                    print(f"🗑️ Deleted old backup: {backup['filename']}")
+                except Exception as e:
+                    print(f"⚠️ Error deleting old backup {backup['filename']}: {e}")
+    except Exception as e:
+        print(f"⚠️ Error during backup cleanup: {e}")
+
+def auto_restore_from_backup():
+    """Automatically restore from the latest backup if database is missing"""
+    if os.path.exists(DB_PATH):
+        return False, "Database exists, no restore needed"
+    
+    backups = list_backups()
+    if not backups:
+        return False, "No backups available to restore from"
+    
+    # Get the latest backup
+    latest_backup = backups[0]  # Already sorted by newest first
+    backup_path = latest_backup['path']
+    
+    try:
+        # Restore from backup
+        shutil.copy2(backup_path, DB_PATH)
+        print(f"✅ Auto-restored database from backup: {latest_backup['filename']}")
+        return True, f"Database restored from {latest_backup['filename']}"
+    except Exception as e:
+        return False, f"Error restoring from backup: {e}"
 
 def list_backups():
     """List all available backups"""
