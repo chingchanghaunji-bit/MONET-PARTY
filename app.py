@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import uuid
 import re
+import secrets
 from datetime import datetime
 
 # --- LOAD ENV SAFELY ---
@@ -39,6 +40,9 @@ app = Flask(__name__)
 # FIXED: Ensure secret key is set for session management (critical for admin panel)
 app.secret_key = os.getenv("SECRET_KEY") or "dev-secret-key-change-in-production-please"
 app.config["UPLOAD_FOLDER"] = os.path.join("static", "qrcodes")
+
+# FIXED: Ensure qrcodes directory exists (critical for Render deployment)
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # ---------------------------------------------------
 # MAIL CONFIG (FIXED!)
@@ -232,7 +236,6 @@ if __name__ == "__main__":
     # FIXED: Ensure secret key is set (critical for sessions on Render)
     if not app.secret_key or app.secret_key == "dev-secret-key-change-in-production-please":
         # Generate a random secret key if not set (for development only)
-        import secrets
         app.secret_key = secrets.token_hex(32)
         print("⚠️  WARNING: Using auto-generated secret key. Set SECRET_KEY in environment for production!")
     
