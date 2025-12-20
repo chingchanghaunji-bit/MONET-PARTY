@@ -78,15 +78,18 @@ def update_user(email, **kwargs):
     conn.close()
 
 def fetch_all_users():
+    """Fetch ALL users from database - NO LIMIT, supports up to 150+ users"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    # FIXED: Fetch ALL users without any LIMIT - ensures all data is preserved
     # Check if created_at column exists, if not order by email
     try:
+        # ORDER BY created_at DESC - newest first, but ALL records are returned
         c.execute("SELECT * FROM allowed ORDER BY created_at DESC")
     except sqlite3.OperationalError:
         # Fallback if created_at doesn't exist
         c.execute("SELECT * FROM allowed ORDER BY email")
-    rows = c.fetchall()
+    rows = c.fetchall()  # fetchall() gets ALL rows - no limit applied
     conn.close()
     return rows
 

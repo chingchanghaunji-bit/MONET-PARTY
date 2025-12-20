@@ -201,8 +201,11 @@ def admin_logout():
 @app.route("/admin/dashboard")
 @login_required
 def admin_dashboard():
+    # FIXED: Fetch ALL users - no limit, ensures all data up to 150+ users is displayed
     users = fetch_all_users()
     stats = get_stats()
+    # Add user count to stats for display
+    stats['displayed_count'] = len(users)
     return render_template("admin_dashboard.html", users=users, stats=stats)
 
 
@@ -292,7 +295,7 @@ def download_ticket(ticket_id):
         
         # Draw footer
         draw.text((ticket_width/2, 750), f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", fill='#888888', font=small_font, anchor='mm')
-        draw.text((ticket_width/2, 770), "© 2024 AFTER PARTY - LIGHT-BEAM VERIFICATION SYSTEM", fill='#888888', font=small_font, anchor='mm')
+        draw.text((ticket_width/2, 770), "© 2026 AFTER PARTY - LIGHT-BEAM VERIFICATION SYSTEM", fill='#888888', font=small_font, anchor='mm')
         
         # Save to bytes
         img_io = io.BytesIO()

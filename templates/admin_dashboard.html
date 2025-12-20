@@ -96,7 +96,12 @@
         <!-- Users Table -->
         <div class="card">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <h2 style="margin: 0;">All Users</h2>
+                <div>
+                    <h2 style="margin: 0;">All Users</h2>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-secondary);">
+                        Showing <strong>{{ stats.displayed_count }}</strong> of <strong>{{ stats.total }}</strong> total users
+                    </p>
+                </div>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                     <a href="/admin/export/excel" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
                         <span>📊</span>
@@ -108,7 +113,7 @@
                     </a>
                 </div>
             </div>
-            <div class="table-container">
+            <div class="table-container" style="max-height: 70vh; overflow-y: auto;">
                 <table id="users-table">
                     <thead>
                         <tr>
@@ -122,9 +127,9 @@
                             <th>Created</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="users-tbody">
                         {% for user in users %}
-                        <tr>
+                        <tr class="user-row">
                             <td>{{ user[0] }}</td>
                             <td>{{ user[1] or 'N/A' }}</td>
                             <td>{{ user[2] or 'N/A' }}</td>
@@ -161,36 +166,87 @@
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if users|length == 0 %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No users found. Add users to get started.
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
+            {% if users|length > 0 %}
+            <div style="padding: 1rem; background: var(--card-bg); border-top: 1px solid var(--border-color); text-align: center;">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong>Total Records:</strong> {{ stats.total }} | 
+                    <strong>Displayed:</strong> {{ stats.displayed_count }} | 
+                    <strong>Capacity:</strong> Up to 150+ users supported
+                </p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
     <footer class="footer">
-        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
     </footer>
 
     <script>
-        // Search functionality
+        // Search functionality - FIXED: Ensures all rows are searchable
         const searchInput = document.getElementById('search-input');
         const table = document.getElementById('users-table');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const tbody = document.getElementById('users-tbody');
+        const rows = tbody.getElementsByClassName('user-row');
+
+        // Display all rows by default
+        function showAllRows() {
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.display = '';
+            }
+        }
+
+        // Initialize - show all rows
+        showAllRows();
 
         searchInput.addEventListener('input', function() {
-            const filter = this.value.toLowerCase();
+            const filter = this.value.toLowerCase().trim();
             
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const text = row.textContent.toLowerCase();
+            if (filter === '') {
+                // Show all rows if search is empty
+                showAllRows();
+            } else {
+                // Filter rows based on search
+                let visibleCount = 0;
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const text = row.textContent.toLowerCase();
+                    
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
                 
-                if (text.includes(filter)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                // Show message if no results
+                let noResults = document.getElementById('no-results-msg');
+                if (visibleCount === 0 && rows.length > 0) {
+                    if (!noResults) {
+                        noResults = document.createElement('tr');
+                        noResults.id = 'no-results-msg';
+                        noResults.innerHTML = `<td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No users found matching "${this.value}"</td>`;
+                        tbody.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
                 }
             }
         });
+
+        // Log total rows for debugging
+        console.log('Total users loaded:', rows.length);
     </script>
 </body>
 </html>
