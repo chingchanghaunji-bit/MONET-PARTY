@@ -1,8 +1,13 @@
 
 import sqlite3
+import os
 from datetime import datetime
 
-DB_PATH = 'database.db'
+# FIXED: Use environment variable for database path to support persistent storage on Render
+# On Render, you can set DB_PATH environment variable to use persistent disk storage
+# Example: DB_PATH=/opt/render/project/src/database.db (for persistent disk)
+# Or use a cloud database service for better persistence
+DB_PATH = os.getenv('DB_PATH', 'database.db')
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -92,6 +97,16 @@ def fetch_all_users():
     rows = c.fetchall()  # fetchall() gets ALL rows - no limit applied
     conn.close()
     return rows
+
+def delete_user(email):
+    """Delete a user from the database by email"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM allowed WHERE email=?", (email,))
+    conn.commit()
+    deleted = c.rowcount > 0
+    conn.close()
+    return deleted
 
 def get_stats():
     conn = sqlite3.connect(DB_PATH)

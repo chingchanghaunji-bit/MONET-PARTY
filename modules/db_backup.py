@@ -8,8 +8,10 @@ import os
 import shutil
 from datetime import datetime
 
-DB_PATH = 'database.db'
-BACKUP_DIR = 'database_backups'
+# FIXED: Use same DB_PATH as db_handler to ensure consistency
+# Import from db_handler or use environment variable
+DB_PATH = os.getenv('DB_PATH', 'database.db')
+BACKUP_DIR = os.getenv('BACKUP_DIR', 'database_backups')
 
 def ensure_backup_dir():
     """Create backup directory if it doesn't exist"""

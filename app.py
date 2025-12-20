@@ -25,6 +25,7 @@ from modules.db_handler import (
     get_user,
     add_user,
     update_user,
+    delete_user,
     fetch_all_users,
     get_stats
 )
@@ -78,6 +79,19 @@ init_mail(app)
 # ---------------------------------------------------
 # INITIALIZE DATABASE
 # ---------------------------------------------------
+# FIXED: Add logging for database path and persistence warnings
+from modules.db_handler import DB_PATH
+print(f"📁 Database path: {DB_PATH}")
+print(f"📁 Database absolute path: {os.path.abspath(DB_PATH)}")
+print(f"📁 Database exists: {os.path.exists(DB_PATH)}")
+
+# Check if we're on Render and using default path (ephemeral storage warning)
+if os.getenv('RENDER') and DB_PATH == 'database.db':
+    print("⚠️  WARNING: Using default database path on Render!")
+    print("⚠️  Render uses ephemeral filesystem - database will be wiped on restart/redeploy!")
+    print("⚠️  SOLUTION: Set DB_PATH environment variable to use persistent disk storage")
+    print("⚠️  Example: DB_PATH=/opt/render/project/src/database.db")
+
 init_db()
 
 # Initialize database backup system
@@ -87,10 +101,15 @@ ensure_backup_dir()
 try:
     from modules.db_handler import get_stats
     stats = get_stats()
+    print(f"📊 Database stats on startup: {stats}")
     if stats['total'] > 0:
-        create_backup()  # Create backup on startup if there's data
-except:
-    pass
+        backup_path = create_backup()  # Create backup on startup if there's data
+        if backup_path:
+            print(f"✅ Startup backup created: {backup_path}")
+        else:
+            print("⚠️  Failed to create startup backup")
+except Exception as e:
+    print(f"⚠️  Error during startup backup: {e}")
 
 
 # ---------------------------------------------------
@@ -260,11 +279,30 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     # FIXED: Fetch ALL users - no limit, ensures all data up to 150+ users is displayed
-    users = fetch_all_users()
-    stats = get_stats()
-    # Add user count to stats for display
-    stats['displayed_count'] = len(users)
-    return render_template("admin_dashboard.html", users=users, stats=stats)
+    try:
+        users = fetch_all_users()
+        stats = get_stats()
+        # Add user count to stats for display
+        stats['displayed_count'] = len(users)
+        
+        # Add database path info for debugging
+        from modules.db_handler import DB_PATH
+        import os
+        db_info = {
+            'path': DB_PATH,
+            'absolute_path': os.path.abspath(DB_PATH),
+            'exists': os.path.exists(DB_PATH),
+            'is_render': os.getenv('RENDER') is not None,
+            'using_default_path': DB_PATH == 'database.db'
+        }
+        
+        return render_template("admin_dashboard.html", users=users, stats=stats, db_info=db_info)
+    except Exception as e:
+        print(f"❌ Error in admin_dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f"Error loading dashboard: {str(e)}", "error")
+        return render_template("admin_dashboard.html", users=[], stats={'total': 0, 'registered': 0, 'verified': 0, 'pending': 0, 'displayed_count': 0}, db_info={})
 
 
 @app.route("/admin/add", methods=["POST"])
@@ -343,6 +381,34 @@ def edit_user(email):
         return redirect(url_for("admin_dashboard"))
     
     return render_template("admin_edit_user.html", user=user)
+
+
+@app.route("/admin/delete/<email>", methods=["POST"])
+@login_required
+def delete_user_admin(email):
+    """Delete a user from the database"""
+    user = get_user(email=email)
+    
+    if not user:
+        flash("User not found!", "error")
+        return redirect(url_for("admin_dashboard"))
+    
+    # Delete the user
+    deleted = delete_user(email)
+    
+    if deleted:
+        # Create backup after deletion
+        try:
+            from modules.db_backup import create_backup
+            create_backup()
+        except:
+            pass
+        
+        flash(f"User {email} deleted successfully!", "success")
+    else:
+        flash(f"Failed to delete user {email}!", "error")
+    
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/admin/backup")

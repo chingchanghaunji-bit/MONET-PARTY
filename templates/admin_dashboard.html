@@ -38,6 +38,16 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Database Persistence Warning for Render -->
+        <div class="alert alert-warning" style="margin-bottom: 1.5rem; background-color: #fff3cd; border: 1px solid #ffc107; padding: 1rem; border-radius: 4px;">
+            <strong>⚠️ Database Persistence Notice:</strong>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                If you're experiencing data loss on Render, it's because Render uses an <strong>ephemeral filesystem</strong> that gets wiped on restarts/redeploys.
+                <br><strong>Solution:</strong> Set the <code>DB_PATH</code> environment variable in Render to use persistent disk storage (e.g., <code>/opt/render/project/src/database.db</code>).
+                <br>Alternatively, use a cloud database service (PostgreSQL, MongoDB) for better persistence.
+            </p>
+        </div>
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -180,10 +190,18 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="/admin/edit/{{ user[0] }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
-                                    <span>✏️</span>
-                                    <span>Edit</span>
-                                </a>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <a href="/admin/edit/{{ user[0] }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span>✏️</span>
+                                        <span>Edit</span>
+                                    </a>
+                                    <form method="POST" action="/admin/delete/{{ user[0] }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete user {{ user[0] }}? This action cannot be undone.');">
+                                        <button type="submit" class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; border: none;">
+                                            <span>🗑️</span>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
