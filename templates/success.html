@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUCCESS - AFTER PARTY</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify">Verify Ticket</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card card-max-width card-center">
+            <div class="success-icon">✅</div>
+            <h1 style="margin-bottom: 1rem;">Registration Successful!</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem; color: var(--text-secondary);">
+                Congratulations {{ name }}! Your party ticket has been generated.
+            </p>
+
+            <div class="qr-container">
+                <img src="/static/qrcodes/{{ ticket_id }}.png" alt="QR Code">
+            </div>
+
+            <div class="ticket-code">{{ ticket_id }}</div>
+
+            <div class="alert alert-success" style="margin: 2rem 0;">
+                <strong>📧 Check Your Email!</strong><br>
+                Your ticket and QR code have been sent to your email address. 
+                Please save this information for entry at the party.
+            </div>
+
+            <div class="info-box">
+                <h3>Important Information:</h3>
+                <ul>
+                    <li>✓ Save your QR code image</li>
+                    <li>✓ Remember your Ticket ID: <strong>{{ ticket_id }}</strong></li>
+                    <li>✓ Bring a valid ID to the party</li>
+                    <li>✓ Show your QR code or Ticket ID at entry</li>
+                </ul>
+            </div>
+
+            <div class="card-footer">
+                <a href="/" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+</body>
+</html>
