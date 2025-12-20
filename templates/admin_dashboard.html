@@ -28,6 +28,16 @@
             <p>Manage party registrations and verify entries</p>
         </div>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: 1.5rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-card">
