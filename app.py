@@ -273,9 +273,76 @@ def add_allowed():
     email = request.form["email"].strip().lower()
     add_user(email)
     # Create backup after adding user
-    create_backup()
+    try:
+        from modules.db_backup import create_backup
+        create_backup()
+    except:
+        pass
     flash(f"User {email} added successfully!", "success")
     return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/edit/<email>", methods=["GET", "POST"])
+@login_required
+def edit_user(email):
+    """Edit user information"""
+    user = get_user(email=email)
+    
+    if not user:
+        flash("User not found!", "error")
+        return redirect(url_for("admin_dashboard"))
+    
+    if request.method == "POST":
+        # Get form data
+        name = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        registered = request.form.get("registered", "0") == "1"
+        verified = request.form.get("verified", "0") == "1"
+        ticket_id = request.form.get("ticket_id", "").strip().upper()
+        
+        # Validate phone number if provided
+        if phone:
+            phone_cleaned = re.sub(r'\D', '', phone)
+            if phone_cleaned.startswith('91') and len(phone_cleaned) == 12:
+                phone_cleaned = phone_cleaned[2:]
+            if len(phone_cleaned) == 10:
+                phone = f"+91 {phone_cleaned[:5]} {phone_cleaned[5:]}"
+            elif len(phone_cleaned) > 0:
+                flash("Invalid phone number format. Please use 10-digit Indian mobile number.", "error")
+                return render_template("admin_edit_user.html", user=user)
+        
+        # Update user data
+        update_data = {}
+        if name:
+            update_data["name"] = name
+        if phone:
+            update_data["phone"] = phone
+        if ticket_id:
+            update_data["ticket_id"] = ticket_id
+        
+        update_data["registered"] = 1 if registered else 0
+        update_data["verified"] = 1 if verified else 0
+        
+        # Update timestamps
+        if registered and not user.get("registered"):
+            update_data["registered_at"] = datetime.now().isoformat()
+        if verified and not user.get("verified"):
+            update_data["verified_at"] = datetime.now().isoformat()
+        
+        # Update user
+        update_user(email, **update_data)
+        
+        # Create backup after editing
+        try:
+            from modules.db_backup import create_backup
+            create_backup()
+        except:
+            pass
+        
+        flash(f"User {email} updated successfully!", "success")
+        return redirect(url_for("admin_dashboard"))
+    
+    return render_template("admin_edit_user.html", user=user)
 
 
 @app.route("/admin/backup")

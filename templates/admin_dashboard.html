@@ -129,6 +129,7 @@
                             <th>Registered</th>
                             <th>Verified</th>
                             <th>Created</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="users-tbody">
@@ -168,11 +169,17 @@
                                     N/A
                                 {% endif %}
                             </td>
+                            <td>
+                                <a href="/admin/edit/{{ user[0] }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span>✏️</span>
+                                    <span>Edit</span>
+                                </a>
+                            </td>
                         </tr>
                         {% endfor %}
                         {% if users|length == 0 %}
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                                 No users found. Add users to get started.
                             </td>
                         </tr>
@@ -240,7 +247,7 @@
                     if (!noResults) {
                         noResults = document.createElement('tr');
                         noResults.id = 'no-results-msg';
-                        noResults.innerHTML = `<td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No users found matching "${this.value}"</td>`;
+                        noResults.innerHTML = `<td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No users found matching "${this.value}"</td>`;
                         tbody.appendChild(noResults);
                     }
                 } else if (noResults) {
