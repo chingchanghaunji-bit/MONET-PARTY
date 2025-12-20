@@ -42,6 +42,17 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY") or "dev-secret-key-change-in-production-please"
 app.config["UPLOAD_FOLDER"] = os.path.join("static", "qrcodes")
 
+# Add custom Jinja2 filter for timestamp conversion
+def timestamp_to_datetime(timestamp):
+    """Convert Unix timestamp to datetime string"""
+    try:
+        from datetime import datetime
+        return datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+    except:
+        return str(timestamp)
+
+app.jinja_env.filters['timestamp_to_datetime'] = timestamp_to_datetime
+
 # FIXED: Ensure qrcodes directory exists (critical for Render deployment)
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -68,6 +79,18 @@ init_mail(app)
 # INITIALIZE DATABASE
 # ---------------------------------------------------
 init_db()
+
+# Initialize database backup system
+from modules.db_backup import create_backup, ensure_backup_dir
+ensure_backup_dir()
+# Create backup on startup (if database exists and has data)
+try:
+    from modules.db_handler import get_stats
+    stats = get_stats()
+    if stats['total'] > 0:
+        create_backup()  # Create backup on startup if there's data
+except:
+    pass
 
 
 # ---------------------------------------------------
@@ -137,6 +160,13 @@ def register():
             ticket_id=ticket_id,
             registered_at=datetime.now().isoformat()
         )
+        
+        # Create backup after successful registration (prevents data loss)
+        try:
+            from modules.db_backup import create_backup
+            create_backup()
+        except Exception as e:
+            print(f"Warning: Backup creation failed: {e}")
 
         send_email(email, name, ticket_id, qr_path)
 
@@ -214,8 +244,47 @@ def admin_dashboard():
 def add_allowed():
     email = request.form["email"].strip().lower()
     add_user(email)
+    # Create backup after adding user
+    create_backup()
     flash(f"User {email} added successfully!", "success")
     return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/backup")
+@login_required
+def admin_backup():
+    """Create manual backup and show backup info"""
+    from modules.db_backup import create_backup, list_backups, get_database_info
+    
+    # Create new backup
+    backup_path = create_backup()
+    
+    # Get database info
+    db_info = get_database_info()
+    backups = list_backups()
+    
+    return render_template("admin_backup.html", 
+                         backup_created=backup_path is not None,
+                         db_info=db_info,
+                         backups=backups)
+
+
+@app.route("/admin/restore/<backup_filename>")
+@login_required
+def admin_restore(backup_filename):
+    """Restore database from backup"""
+    from modules.db_backup import restore_backup, list_backups
+    import os
+    
+    backup_path = os.path.join('database_backups', backup_filename)
+    success, message = restore_backup(backup_path)
+    
+    if success:
+        flash(f"✅ {message}", "success")
+    else:
+        flash(f"❌ {message}", "error")
+    
+    return redirect(url_for("admin_backup"))
 
 @app.route("/api/stats")
 @login_required
