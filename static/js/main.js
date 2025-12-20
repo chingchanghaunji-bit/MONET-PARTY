@@ -27,6 +27,7 @@ const Utils = {
     },
     
     formatPhone: (value) => {
+        // FIXED: Format phone number without forcing +91 prefix
         // Remove all non-digit characters
         let cleaned = value.replace(/\D/g, '');
         
@@ -40,11 +41,20 @@ const Utils = {
             cleaned = cleaned.slice(0, 10);
         }
         
-        // Format as Indian number: +91 XXXXX XXXXX
-        // Only add +91 prefix if we have digits, and ensure it's only at the start
+        // Format as Indian number: +91 XXXXX XXXXX (only if user included + or 91)
+        // Otherwise return plain digits
         if (cleaned.length === 0) return '';
-        if (cleaned.length <= 5) return `+91 ${cleaned}`;
-        return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+        
+        // Check if original value had + or 91 prefix
+        const hadPrefix = value.includes('+') || value.includes('91');
+        
+        if (hadPrefix) {
+            if (cleaned.length <= 5) return `+91 ${cleaned}`;
+            return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+        } else {
+            // Return plain digits if user didn't include prefix
+            return cleaned;
+        }
     },
     
     validateEmail: (email) => {
@@ -63,96 +73,85 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Enhanced phone number formatting - Indian format
+    // FIXED: Allow clean numeric input without forced +91 prefix
     const phoneInputs = document.querySelectorAll('input[type="tel"]');
     phoneInputs.forEach(input => {
-        // Track if +91 prefix is already present
-        let hasPrefix = false;
+        // Track user's input to avoid interfering with typing
+        let isUserTyping = false;
         
         input.addEventListener('input', function(e) {
-            // Get current cursor position
+            isUserTyping = true;
             const cursorPos = this.selectionStart;
             let value = this.value;
             
-            // Check if +91 is already at the start
-            const startsWithPrefix = value.startsWith('+91 ');
+            // Allow user to type freely - don't force +91 prefix
+            // Only format if user explicitly includes +91 or types 91 at start
+            const hasPlus = value.includes('+');
+            const digitsOnly = value.replace(/\D/g, '');
             
-            // Remove all non-digits to get clean number
-            let cleaned = value.replace(/\D/g, '');
-            
-            // Remove leading 91 if user typed it (we'll add +91 prefix separately)
-            if (cleaned.startsWith('91') && cleaned.length > 10) {
-                cleaned = cleaned.substring(2);
-            }
-            
-            // Limit to 10 digits
-            if (cleaned.length > 10) {
-                cleaned = cleaned.slice(0, 10);
-            }
-            
-            // Format: always ensure +91 is only at the start
-            if (cleaned.length === 0) {
-                this.value = '';
-            } else if (cleaned.length <= 5) {
-                this.value = `+91 ${cleaned}`;
+            // If user typed +91 or starts with 91, handle it
+            if (hasPlus || (digitsOnly.startsWith('91') && digitsOnly.length > 10)) {
+                // User wants country code format
+                let phoneDigits = digitsOnly;
+                if (phoneDigits.startsWith('91') && phoneDigits.length > 10) {
+                    phoneDigits = phoneDigits.substring(2);
+                }
+                
+                // Limit to 10 digits
+                if (phoneDigits.length > 10) {
+                    phoneDigits = phoneDigits.slice(0, 10);
+                }
+                
+                // Format with +91 prefix
+                if (phoneDigits.length === 0) {
+                    this.value = '';
+                } else if (phoneDigits.length <= 5) {
+                    this.value = `+91 ${phoneDigits}`;
+                } else {
+                    this.value = `+91 ${phoneDigits.slice(0, 5)} ${phoneDigits.slice(5)}`;
+                }
             } else {
-                this.value = `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+                // User is typing plain digits - allow it, limit to 10 digits
+                const cleanDigits = digitsOnly.slice(0, 10);
+                this.value = cleanDigits;
             }
             
-            // Restore cursor position (adjust for formatting)
-            // If cursor was in the prefix area, keep it after prefix
-            if (cursorPos <= 4 && startsWithPrefix) {
-                this.setSelectionRange(this.value.length, this.value.length);
-            } else {
-                // Try to maintain relative position
+            // Restore cursor position
+            setTimeout(() => {
                 const newPos = Math.min(cursorPos, this.value.length);
                 this.setSelectionRange(newPos, newPos);
-            }
+                isUserTyping = false;
+            }, 0);
         });
         
         input.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
-            // Auto-add +91 prefix on focus if empty
-            if (!this.value || this.value.trim() === '') {
-                this.value = '+91 ';
-                this.setSelectionRange(4, 4); // Place cursor after "+91 "
-            } else if (!this.value.startsWith('+91 ')) {
-                // If value exists but doesn't start with +91, format it
-                const cleaned = this.value.replace(/\D/g, '');
-                if (cleaned.startsWith('91') && cleaned.length > 10) {
-                    const phoneDigits = cleaned.substring(2);
-                    this.value = Utils.formatPhone(phoneDigits);
-                } else {
-                    this.value = Utils.formatPhone(cleaned);
-                }
-            }
+            // Don't auto-add +91 - let user type freely
         });
         
         input.addEventListener('blur', function() {
-            const digitsOnly = this.value.replace(/\D/g, '');
-            // Remove leading 91 if present
-            const phoneDigits = digitsOnly.startsWith('91') && digitsOnly.length > 10 
-                ? digitsOnly.substring(2) 
-                : digitsOnly;
+            const value = this.value.trim();
+            const digitsOnly = value.replace(/\D/g, '');
             
-            if (phoneDigits.length !== 10 && this.value.length > 0) {
+            // Extract actual phone digits (remove country code if present)
+            let phoneDigits = digitsOnly;
+            if (digitsOnly.startsWith('91') && digitsOnly.length > 10) {
+                phoneDigits = digitsOnly.substring(2);
+            }
+            
+            // Validate: must be exactly 10 digits
+            if (phoneDigits.length !== 10 && value.length > 0) {
                 this.style.borderColor = 'var(--danger-color)';
                 Utils.showToast('Please enter a valid 10-digit Indian mobile number', 'error');
+            } else if (phoneDigits.length === 10) {
+                this.style.borderColor = 'var(--success-color)';
+                // Optional: Format with +91 prefix on blur if user didn't include it
+                // But respect if user typed plain digits
+                if (value.includes('+') || value.includes('91')) {
+                    this.value = `+91 ${phoneDigits.slice(0, 5)} ${phoneDigits.slice(5)}`;
+                }
             } else {
                 this.style.borderColor = 'var(--border-color)';
-                // Ensure proper formatting
-                if (phoneDigits.length === 10) {
-                    this.value = Utils.formatPhone(phoneDigits);
-                }
-            }
-        });
-        
-        // Prevent user from deleting the +91 prefix
-        input.addEventListener('keydown', function(e) {
-            const cursorPos = this.selectionStart;
-            // If cursor is at position 0-3 and user tries to delete/backspace, prevent it
-            if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 4) {
-                e.preventDefault();
-                this.setSelectionRange(4, 4); // Move cursor to after "+91 "
             }
         });
     });

@@ -53,7 +53,14 @@
 
                 <div class="form-group">
                     <label for="phone">Phone Number *</label>
-                    <input type="tel" id="phone" name="phone" class="form-control" required placeholder="+91 98765 43210" pattern="[+]?91[ ]?[0-9]{5}[ ]?[0-9]{5}" maxlength="15">
+                    <input type="tel" id="phone" name="phone" class="form-control" required 
+                           placeholder="9876543210 or +91 98765 43210" 
+                           pattern="(\+91[ ]?)?[0-9]{10}" 
+                           maxlength="17"
+                           title="Enter 10-digit Indian mobile number (with or without +91)">
+                    <small class="form-hint">
+                        Enter your 10-digit mobile number (e.g., 9876543210)
+                    </small>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block">Register & Get Ticket</button>

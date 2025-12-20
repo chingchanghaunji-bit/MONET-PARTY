@@ -6,9 +6,16 @@ import re
 from datetime import datetime
 
 # --- LOAD ENV SAFELY ---
+# FIXED: Load .env file if it exists (local development)
+# On Render, environment variables are set directly, so this won't override them
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
-load_dotenv(ENV_PATH)
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+else:
+    # On Render/production, environment variables are set directly
+    # load_dotenv() will use existing environment variables
+    load_dotenv(override=False)
 
 # --- IMPORT DB FUNCTIONS ---
 from modules.db_handler import (
@@ -29,7 +36,8 @@ from modules.email_sender import init_mail, send_email
 # FLASK APP SETUP
 # ---------------------------------------------------
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
+# FIXED: Ensure secret key is set for session management (critical for admin panel)
+app.secret_key = os.getenv("SECRET_KEY") or "dev-secret-key-change-in-production-please"
 app.config["UPLOAD_FOLDER"] = os.path.join("static", "qrcodes")
 
 # ---------------------------------------------------
@@ -64,7 +72,8 @@ from functools import wraps
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if "admin" not in session:
+        # FIXED: Improved session check for production
+        if "admin" not in session or not session.get("admin"):
             return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return wrapper
@@ -85,20 +94,23 @@ def register():
         name = request.form["name"]
         phone = request.form["phone"].strip()
         
-        # Normalize Indian phone number: remove spaces, +, and ensure +91 prefix
+        # FIXED: Normalize Indian phone number - handle both formats
+        # Accept: 10 digits OR +91 + 10 digits OR 91 + 10 digits
         phone_cleaned = re.sub(r'\D', '', phone)  # Remove all non-digits
         
         # Handle different input formats
         if phone_cleaned.startswith('91') and len(phone_cleaned) == 12:
             phone_cleaned = phone_cleaned[2:]  # Remove country code if present
+        elif phone_cleaned.startswith('91') and len(phone_cleaned) == 11:
+            # Handle case where user typed 91 + 9 digits (should be 10)
+            phone_cleaned = phone_cleaned[2:] if len(phone_cleaned) > 10 else phone_cleaned
         
-        # Format as Indian number: +91 XXXXX XXXXX
-        if len(phone_cleaned) == 10:
-            phone = f"+91 {phone_cleaned[:5]} {phone_cleaned[5:]}"
-        elif len(phone_cleaned) > 0:
-            # If invalid length, show error
-            if len(phone_cleaned) != 10:
-                return render_template("register.html", error="Please enter a valid 10-digit Indian mobile number (e.g., +91 98765 43210)")
+        # Validate: must be exactly 10 digits
+        if len(phone_cleaned) != 10:
+            return render_template("register.html", error="Please enter a valid 10-digit Indian mobile number (e.g., 9876543210 or +91 98765 43210)")
+        
+        # Format as Indian number: +91 XXXXX XXXXX (standardized format)
+        phone = f"+91 {phone_cleaned[:5]} {phone_cleaned[5:]}"
 
         user = get_user(email=email)
         if not user:
@@ -153,15 +165,21 @@ def verify():
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
-        user = request.form["username"]
-        pw = request.form["password"]
+        user = request.form.get("username", "").strip()
+        pw = request.form.get("password", "").strip()
 
-        # Get admin credentials with defaults
+        # FIXED: Get admin credentials with proper environment variable handling
+        # Works on both local and Render production
         admin_user = os.getenv("ADMIN_USER", "admin")
         admin_pass = os.getenv("ADMIN_PASS", "admin123")
 
+        # Debug logging (remove in production if needed)
+        if not admin_user or not admin_pass:
+            print("WARNING: Admin credentials not set in environment variables")
+
         if user == admin_user and pw == admin_pass:
             session["admin"] = user
+            session.permanent = True  # Make session persistent
             return redirect(url_for("admin_dashboard"))
 
         return render_template("admin_login.html", error="Invalid credentials. Please try again.")
@@ -210,18 +228,27 @@ def api_search():
 # ---------------------------------------------------
 if __name__ == "__main__":
     os.makedirs("static/qrcodes", exist_ok=True)
-    # Set default secret key if not in env
-    if not app.secret_key:
-        app.secret_key = "dev-secret-key-change-in-production"
     
-    # Set default admin credentials if not in env
-    if not os.getenv("ADMIN_USER"):
+    # FIXED: Ensure secret key is set (critical for sessions on Render)
+    if not app.secret_key or app.secret_key == "dev-secret-key-change-in-production-please":
+        # Generate a random secret key if not set (for development only)
+        import secrets
+        app.secret_key = secrets.token_hex(32)
+        print("⚠️  WARNING: Using auto-generated secret key. Set SECRET_KEY in environment for production!")
+    
+    # FIXED: Check environment variables for production (Render)
+    admin_user = os.getenv("ADMIN_USER")
+    admin_pass = os.getenv("ADMIN_PASS")
+    
+    if not admin_user or not admin_pass:
         print("\n" + "="*50)
-        print("⚠️  DEFAULT ADMIN CREDENTIALS:")
+        print("⚠️  DEFAULT ADMIN CREDENTIALS (Development Mode):")
         print("   Username: admin")
         print("   Password: admin123")
-        print("   Change these in .env file for production!")
+        print("   ⚠️  Set ADMIN_USER and ADMIN_PASS in Render environment variables for production!")
         print("="*50 + "\n")
+    else:
+        print("\n✅ Admin credentials loaded from environment variables")
     
     print("\n🚀 Starting Party Entry System...")
     port = int(os.environ.get("PORT", 10000))
@@ -232,5 +259,6 @@ if __name__ == "__main__":
     
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000))
+        port=port,
+        debug=False  # Disable debug mode in production
     )
