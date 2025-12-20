@@ -48,6 +48,17 @@
             </div>
         </div>
 
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">Actions</h2>
+                <a href="/admin/export" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📥</span>
+                    <span>Download All Data</span>
+                </a>
+            </div>
+        </div>
+
         <!-- Add User Card -->
         <div class="card">
             <div class="card-header">
@@ -72,8 +83,12 @@
 
         <!-- Users Table -->
         <div class="card">
-            <div class="card-header">
-                <h2>All Users</h2>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">All Users</h2>
+                <a href="/admin/export" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📥</span>
+                    <span>Export Data</span>
+                </a>
             </div>
             <div class="table-container">
                 <table id="users-table">

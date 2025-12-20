@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, Response
 from dotenv import load_dotenv
 import os
 import uuid
@@ -225,6 +225,61 @@ def api_search():
     users = fetch_all_users()
     filtered = [u for u in users if query in str(u).lower()]
     return jsonify(filtered)
+
+
+@app.route("/admin/export")
+@login_required
+def export_data():
+    """Export all registered user data as a formatted text file"""
+    users = fetch_all_users()
+    
+    # Create formatted text content
+    lines = []
+    lines.append("=" * 120)
+    lines.append("PARTY ENTRY SYSTEM - REGISTERED USERS DATA EXPORT")
+    lines.append("=" * 120)
+    lines.append(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append(f"Total Records: {len(users)}")
+    lines.append("=" * 120)
+    lines.append("")
+    
+    # Header row
+    header = f"{'S.No.':<6} {'Name':<25} {'Email':<30} {'Phone':<18} {'Ticket ID':<12} {'Registered':<12} {'Verified':<12} {'Created At':<20} {'Registered At':<20} {'Verified At':<20}"
+    lines.append(header)
+    lines.append("-" * 120)
+    
+    # Data rows
+    for idx, user in enumerate(users, 1):
+        email = user[0] or 'N/A'
+        name = user[1] or 'N/A'
+        phone = user[2] or 'N/A'
+        registered = 'Yes' if user[3] == 1 else 'No'
+        ticket_id = user[4] or 'N/A'
+        verified = 'Yes' if user[5] == 1 else 'No'
+        created_at = user[6][:19] if user[6] else 'N/A'
+        registered_at = user[7][:19] if user[7] else 'N/A'
+        verified_at = user[8][:19] if user[8] else 'N/A'
+        
+        # Format row with proper spacing
+        row = f"{idx:<6} {name[:24]:<25} {email[:29]:<30} {phone[:17]:<18} {ticket_id[:11]:<12} {registered:<12} {verified:<12} {created_at[:19]:<20} {registered_at[:19]:<20} {verified_at[:19]:<20}"
+        lines.append(row)
+    
+    lines.append("")
+    lines.append("=" * 120)
+    lines.append("End of Report")
+    lines.append("=" * 120)
+    
+    # Create response with text file
+    content = "\n".join(lines)
+    response = Response(
+        content,
+        mimetype='text/plain',
+        headers={
+            'Content-Disposition': f'attachment; filename=party_registrations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt'
+        }
+    )
+    
+    return response
 
 
 # ---------------------------------------------------
