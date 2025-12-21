@@ -64,17 +64,15 @@ app.jinja_env.filters['timestamp_to_datetime'] = timestamp_to_datetime
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # ---------------------------------------------------
-# MAIL CONFIG (FIXED!)
+# MAIL CONFIG (Optional - app works without email)
 # ---------------------------------------------------
 _mail_port_raw = os.getenv("MAIL_PORT")
-print("DEBUG: MAIL_PORT raw from env ->", repr(_mail_port_raw))
-
 # safe fallback to 587 if None or invalid
 _mail_port_safe = int(_mail_port_raw) if _mail_port_raw and _mail_port_raw.isdigit() else 587
 
 app.config["MAIL_PORT"] = _mail_port_safe
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
-app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME") or os.getenv("MAIL_USER")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS") == "True"
 app.config["MAIL_USE_SSL"] = os.getenv("MAIL_USE_SSL") == "True"
@@ -83,43 +81,63 @@ app.config["MAIL_USE_SSL"] = os.getenv("MAIL_USE_SSL") == "True"
 init_mail(app)
 
 # ---------------------------------------------------
-# INITIALIZE DATABASE (PostgreSQL)
+# DATABASE CONFIGURATION (PostgreSQL)
 # ---------------------------------------------------
-# PRODUCTION: Verify DATABASE_URL is set (required for Render PostgreSQL)
-# DATABASE_URL is required - app cannot function without it
+# DATABASE_URL is checked at startup, not at import time
+# This prevents blocking during app import
 DATABASE_URL = os.getenv('DATABASE_URL')
-if not DATABASE_URL:
-    print("❌ ERROR: DATABASE_URL environment variable not set!")
-    print("❌ Please create a PostgreSQL database in Render and set DATABASE_URL")
-    print("❌ The app cannot start without a valid DATABASE_URL")
-    print("❌ Go to Render Dashboard → Your Web Service → Environment → Add DATABASE_URL")
-    raise ValueError("DATABASE_URL environment variable is required. Set it in Render dashboard.")
-else:
+
+
+# ---------------------------------------------------
+# STARTUP FUNCTION (Runs after app is created, not at import)
+# ---------------------------------------------------
+def initialize_app():
+    """Initialize database and app configuration - called after app creation"""
+    # Check DATABASE_URL
+    if not DATABASE_URL:
+        print("❌ ERROR: DATABASE_URL environment variable not set!")
+        print("❌ Please create a PostgreSQL database in Render and set DATABASE_URL")
+        print("❌ The app cannot function without a valid DATABASE_URL")
+        print("❌ Go to Render Dashboard → Your Web Service → Environment → Add DATABASE_URL")
+        # Don't raise - let Gunicorn start, but log the error
+        return False
+    
     print("✅ DATABASE_URL found - connecting to PostgreSQL")
     # Mask password in logs for security
     safe_url = DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else DATABASE_URL
     print(f"📁 Database: {safe_url}")
+    
+    # Initialize database (safe migration, idempotent)
+    try:
+        init_db()
+        from modules.db_handler import get_stats
+        stats = get_stats()
+        print(f"📊 Database stats: {stats}")
+        print("✅ PostgreSQL database initialized successfully")
+        print("✅ Tables use IF NOT EXISTS - data persists across redeploys")
+        print("✅ Migrations are idempotent - safe for redeploys")
+        return True
+    except Exception as e:
+        print(f"❌ Error initializing PostgreSQL database: {e}")
+        print("⚠️  Make sure DATABASE_URL is set correctly in Render environment variables")
+        print("⚠️  Verify PostgreSQL database is running and accessible")
+        import traceback
+        traceback.print_exc()
+        # Don't raise - let app start, but database operations will fail
+        return False
 
-# PRODUCTION: Initialize PostgreSQL database
-# Tables are created with IF NOT EXISTS - no data loss on restart
-# Migrations are idempotent - safe to run multiple times
-# Wrapped in try/except to prevent startup crashes
-try:
-    init_db()
-    from modules.db_handler import get_stats
-    stats = get_stats()
-    print(f"📊 Database stats on startup: {stats}")
-    print("✅ PostgreSQL database initialized successfully")
-    print("✅ Tables use IF NOT EXISTS - data persists across redeploys")
-    print("✅ Migrations are idempotent - safe for redeploys")
-except Exception as e:
-    print(f"❌ Error initializing PostgreSQL database: {e}")
-    print("⚠️  Make sure DATABASE_URL is set correctly in Render environment variables")
-    print("⚠️  Verify PostgreSQL database is running and accessible")
-    import traceback
-    traceback.print_exc()
-    # Re-raise to prevent app from starting with broken database
-    raise
+
+# Initialize app on first request (non-blocking)
+# Flask 3.x compatible - use before_request with flag
+_app_initialized = False
+
+@app.before_request
+def startup():
+    """Initialize app on first request (Flask 3.x compatible)"""
+    global _app_initialized
+    if not _app_initialized:
+        _app_initialized = True
+        initialize_app()
 
 
 # ---------------------------------------------------
@@ -218,38 +236,26 @@ def register():
 
 @app.route("/verify/login", methods=["GET", "POST"])
 def verify_login():
-    """Login page for verification system"""
-    if request.method == "POST":
-        user = request.form.get("username", "").strip()
-        pw = request.form.get("password", "").strip()
-
-        # Get verification credentials from environment variables
-        verify_user = os.getenv("VERIFY_USER", "verify")
-        verify_pass = os.getenv("VERIFY_PASS", "verify123")
-
-        if user == verify_user and pw == verify_pass:
-            session["verify"] = user
-            session.permanent = True
-            return redirect(url_for("verify"))
-
-        return render_template("verify_login.html", error="Invalid credentials. Please try again.")
-
-    return render_template("verify_login.html")
+    """Verification requires admin login - redirect to admin login"""
+    flash("Verification requires admin access. Please login as admin.", "info")
+    return redirect(url_for("admin_login"))
 
 
 @app.route("/verify/logout")
 def verify_logout():
-    """Logout from verification system"""
-    session.pop("verify", None)
-    return redirect(url_for("verify_login"))
+    """Logout from verification system (uses admin session)"""
+    session.pop("admin", None)
+    return redirect(url_for("admin_login"))
 
 
 def verify_required(f):
-    """Decorator to require verification login"""
+    """Decorator to require admin login for verification (admin-only)"""
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if "verify" not in session or not session.get("verify"):
-            return redirect(url_for("verify_login"))
+        # Verification is admin-only - use admin session check
+        if "admin" not in session or not session.get("admin"):
+            flash("Access denied. Admin login required for verification.", "error")
+            return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return wrapper
 
@@ -284,10 +290,10 @@ def admin_login():
         pw = request.form.get("password", "").strip()
 
         # Get admin credentials with proper environment variable handling
-        # Support both ADMIN_USER/ADMIN_PASS and ADMIN_ID/ADMIN_PASSWORD for compatibility
+        # Support ADMIN_USER/ADMIN_PASS, ADMIN_ID/ADMIN_PASSWORD, and ADMIN_SECRET
         # Works on both local and Render production
         admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID") or "admin"
-        admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or "admin123"
+        admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SECRET") or "admin123"
 
         # Debug logging (remove in production if needed)
         if not admin_user or not admin_pass:
@@ -734,57 +740,28 @@ atexit.register(close_db_pool)
 # ---------------------------------------------------
 # RUN APP
 # ---------------------------------------------------
-if __name__ == "__main__":
-    os.makedirs("static/qrcodes", exist_ok=True)
-    
-    # FIXED: Ensure secret key is set (critical for sessions on Render)
-    if not app.secret_key or app.secret_key == "dev-secret-key-change-in-production-please":
-        # Generate a random secret key if not set (for development only)
-        app.secret_key = secrets.token_hex(32)
-        print("⚠️  WARNING: Using auto-generated secret key. Set SECRET_KEY in environment for production!")
-    
-    # Check environment variables for production (Render)
-    # Support both ADMIN_USER/ADMIN_PASS and ADMIN_ID/ADMIN_PASSWORD for compatibility
-    admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID")
-    admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD")
-    
-    if not admin_user or not admin_pass:
-        print("\n" + "="*50)
-        print("⚠️  WARNING: Admin credentials not set in environment variables!")
-        print("⚠️  Using DEFAULT ADMIN CREDENTIALS (Development Mode):")
-        print("   Username: admin")
-        print("   Password: admin123")
-        print("⚠️  Set ADMIN_USER and ADMIN_PASS (or ADMIN_ID and ADMIN_PASSWORD)")
-        print("   in Render environment variables for production security!")
-        print("="*50 + "\n")
-    else:
-        print("✅ Admin credentials loaded from environment variables")
-    
-    # Check verification credentials
-    verify_user = os.getenv("VERIFY_USER")
-    verify_pass = os.getenv("VERIFY_PASS")
-    
-    if not verify_user or not verify_pass:
-        print("⚠️  WARNING: Verification credentials not set in environment variables!")
-        print("⚠️  Using DEFAULT VERIFICATION CREDENTIALS (Development Mode):")
-        print("   Username: verify")
-        print("   Password: verify123")
-        print("⚠️  Set VERIFY_USER and VERIFY_PASS in Render environment variables for production!")
-    else:
-        print("✅ Verification credentials loaded from environment variables")
-    
-    print("\n🚀 Starting Party Entry System...")
-    print("🐘 Using PostgreSQL database (persistent storage)")
-    port = int(os.environ.get("PORT", 10000))
-    print(f"📍 Server running on port: {port}")
-    print("🔐 Admin login: /admin/login")
-    print("📝 Register: /register")
-    print("✅ Verify: /verify/login (requires authentication)\n")
-    print("✅ Money Amount: Column added to database and admin dashboard\n")
-    print("✅ Version: 2.0.0 - Verification Lock + Money Amount Feature\n")
-    
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False  # Disable debug mode in production
-    )
+# ---------------------------------------------------
+# PRODUCTION: App is started by Gunicorn
+# ---------------------------------------------------
+# No app.run() - Gunicorn handles server startup
+# All initialization happens in startup() function
+# This ensures the app is import-safe and doesn't block
+
+# Print startup info (non-blocking)
+if not DATABASE_URL:
+    print("⚠️  WARNING: DATABASE_URL not set - database features will not work")
+else:
+    print("✅ DATABASE_URL configured - will initialize on first request")
+
+# Check admin credentials (warnings only, no blocking)
+admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID")
+admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SECRET")
+
+if not admin_user or not admin_pass:
+    print("⚠️  WARNING: Admin credentials not set - using defaults (admin/admin123)")
+    print("⚠️  Set ADMIN_USER and ADMIN_PASS in environment variables for production!")
+else:
+    print("✅ Admin credentials configured")
+
+print("🚀 Flask app initialized - ready for Gunicorn")
+print("📝 Routes: /register, /admin/login, /verify (admin-only)")
