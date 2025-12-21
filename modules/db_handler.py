@@ -127,14 +127,22 @@ def init_db():
             if not cur.fetchone():
                 cur.execute("ALTER TABLE allowed ADD COLUMN verified_at TIMESTAMP")
             
-            # Add money_amount column if it doesn't exist
+            # Add money_amount column if it doesn't exist (safe migration)
             cur.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
                 WHERE table_name='allowed' AND column_name='money_amount'
             """)
             if not cur.fetchone():
-                cur.execute("ALTER TABLE allowed ADD COLUMN money_amount DECIMAL(10, 2) DEFAULT 0")
+                try:
+                    cur.execute("ALTER TABLE allowed ADD COLUMN money_amount DECIMAL(10, 2) DEFAULT 0")
+                    print("✅ Added money_amount column to database")
+                except Exception as col_error:
+                    # Column might have been added by another process, ignore if it already exists
+                    if 'already exists' not in str(col_error).lower() and 'duplicate' not in str(col_error).lower():
+                        print(f"⚠️  Warning: Could not add money_amount column: {col_error}")
+                    else:
+                        print("✅ money_amount column already exists")
             
             conn.commit()
             print("✅ Database initialized (table exists or created)")

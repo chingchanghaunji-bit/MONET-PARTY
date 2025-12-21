@@ -88,9 +88,10 @@ init_mail(app)
 # PRODUCTION: Verify DATABASE_URL is set (required for Render PostgreSQL)
 DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
-    print("⚠️  WARNING: DATABASE_URL environment variable not set!")
-    print("⚠️  Please create a PostgreSQL database in Render and set DATABASE_URL")
-    print("⚠️  The app will fail to start without a valid DATABASE_URL")
+    print("❌ ERROR: DATABASE_URL environment variable not set!")
+    print("❌ Please create a PostgreSQL database in Render and set DATABASE_URL")
+    print("❌ The app cannot start without a valid DATABASE_URL")
+    print("❌ Go to Render Dashboard → Your Web Service → Environment → Add DATABASE_URL")
     raise ValueError("DATABASE_URL environment variable is required. Set it in Render dashboard.")
 else:
     print("✅ DATABASE_URL found - connecting to PostgreSQL")
@@ -100,6 +101,7 @@ else:
 
 # PRODUCTION: Initialize PostgreSQL database
 # Tables are created with IF NOT EXISTS - no data loss on restart
+# Migrations are idempotent - safe to run multiple times
 try:
     init_db()
     from modules.db_handler import get_stats
@@ -107,10 +109,13 @@ try:
     print(f"📊 Database stats on startup: {stats}")
     print("✅ PostgreSQL database initialized successfully")
     print("✅ Tables use IF NOT EXISTS - data persists across redeploys")
+    print("✅ Migrations are idempotent - safe for redeploys")
 except Exception as e:
     print(f"❌ Error initializing PostgreSQL database: {e}")
     print("⚠️  Make sure DATABASE_URL is set correctly in Render environment variables")
     print("⚠️  Verify PostgreSQL database is running and accessible")
+    import traceback
+    traceback.print_exc()
     raise
 
 
@@ -746,7 +751,19 @@ if __name__ == "__main__":
         print("   ⚠️  Set ADMIN_USER and ADMIN_PASS in Render environment variables for production!")
         print("="*50 + "\n")
     else:
-        print("\n✅ Admin credentials loaded from environment variables")
+        print("✅ Admin credentials loaded from environment variables")
+    
+    # Check verification credentials
+    verify_user = os.getenv("VERIFY_USER")
+    verify_pass = os.getenv("VERIFY_PASS")
+    
+    if not verify_user or not verify_pass:
+        print("⚠️  DEFAULT VERIFICATION CREDENTIALS (Development Mode):")
+        print("   Username: verify")
+        print("   Password: verify123")
+        print("   ⚠️  Set VERIFY_USER and VERIFY_PASS in Render environment variables for production!")
+    else:
+        print("✅ Verification credentials loaded from environment variables")
     
     print("\n🚀 Starting Party Entry System...")
     print("🐘 Using PostgreSQL database (persistent storage)")
