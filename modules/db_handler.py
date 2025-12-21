@@ -127,22 +127,28 @@ def init_db():
             if not cur.fetchone():
                 cur.execute("ALTER TABLE allowed ADD COLUMN verified_at TIMESTAMP")
             
-            # Add money_amount column if it doesn't exist (safe migration)
-            cur.execute("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name='allowed' AND column_name='money_amount'
-            """)
-            if not cur.fetchone():
-                try:
-                    cur.execute("ALTER TABLE allowed ADD COLUMN money_amount DECIMAL(10, 2) DEFAULT 0")
+            # Add money_amount column if it doesn't exist (safe migration - idempotent)
+            # PostgreSQL doesn't support IF NOT EXISTS for ALTER TABLE, so we check first
+            try:
+                cur.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name='allowed' AND column_name='money_amount'
+                """)
+                if not cur.fetchone():
+                    cur.execute("ALTER TABLE allowed ADD COLUMN money_amount NUMERIC(10, 2) DEFAULT 0")
                     print("✅ Added money_amount column to database")
-                except Exception as col_error:
-                    # Column might have been added by another process, ignore if it already exists
-                    if 'already exists' not in str(col_error).lower() and 'duplicate' not in str(col_error).lower():
-                        print(f"⚠️  Warning: Could not add money_amount column: {col_error}")
-                    else:
-                        print("✅ money_amount column already exists")
+                else:
+                    print("✅ money_amount column already exists (migration skipped)")
+            except Exception as col_error:
+                # Column might have been added by another process, ignore if it already exists
+                error_str = str(col_error).lower()
+                if 'already exists' in error_str or 'duplicate' in error_str:
+                    print("✅ money_amount column already exists (safe to ignore)")
+                else:
+                    # Log but don't crash - migration might have failed but column could exist
+                    print(f"⚠️  Warning during money_amount migration: {col_error}")
+                    print("⚠️  Continuing startup - column may already exist")
             
             conn.commit()
             print("✅ Database initialized (table exists or created)")

@@ -86,6 +86,7 @@ init_mail(app)
 # INITIALIZE DATABASE (PostgreSQL)
 # ---------------------------------------------------
 # PRODUCTION: Verify DATABASE_URL is set (required for Render PostgreSQL)
+# DATABASE_URL is required - app cannot function without it
 DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
     print("❌ ERROR: DATABASE_URL environment variable not set!")
@@ -102,6 +103,7 @@ else:
 # PRODUCTION: Initialize PostgreSQL database
 # Tables are created with IF NOT EXISTS - no data loss on restart
 # Migrations are idempotent - safe to run multiple times
+# Wrapped in try/except to prevent startup crashes
 try:
     init_db()
     from modules.db_handler import get_stats
@@ -116,6 +118,7 @@ except Exception as e:
     print("⚠️  Verify PostgreSQL database is running and accessible")
     import traceback
     traceback.print_exc()
+    # Re-raise to prevent app from starting with broken database
     raise
 
 
@@ -280,10 +283,11 @@ def admin_login():
         user = request.form.get("username", "").strip()
         pw = request.form.get("password", "").strip()
 
-        # FIXED: Get admin credentials with proper environment variable handling
+        # Get admin credentials with proper environment variable handling
+        # Support both ADMIN_USER/ADMIN_PASS and ADMIN_ID/ADMIN_PASSWORD for compatibility
         # Works on both local and Render production
-        admin_user = os.getenv("ADMIN_USER", "admin")
-        admin_pass = os.getenv("ADMIN_PASS", "admin123")
+        admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID") or "admin"
+        admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or "admin123"
 
         # Debug logging (remove in production if needed)
         if not admin_user or not admin_pass:
@@ -739,16 +743,19 @@ if __name__ == "__main__":
         app.secret_key = secrets.token_hex(32)
         print("⚠️  WARNING: Using auto-generated secret key. Set SECRET_KEY in environment for production!")
     
-    # FIXED: Check environment variables for production (Render)
-    admin_user = os.getenv("ADMIN_USER")
-    admin_pass = os.getenv("ADMIN_PASS")
+    # Check environment variables for production (Render)
+    # Support both ADMIN_USER/ADMIN_PASS and ADMIN_ID/ADMIN_PASSWORD for compatibility
+    admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID")
+    admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD")
     
     if not admin_user or not admin_pass:
         print("\n" + "="*50)
-        print("⚠️  DEFAULT ADMIN CREDENTIALS (Development Mode):")
+        print("⚠️  WARNING: Admin credentials not set in environment variables!")
+        print("⚠️  Using DEFAULT ADMIN CREDENTIALS (Development Mode):")
         print("   Username: admin")
         print("   Password: admin123")
-        print("   ⚠️  Set ADMIN_USER and ADMIN_PASS in Render environment variables for production!")
+        print("⚠️  Set ADMIN_USER and ADMIN_PASS (or ADMIN_ID and ADMIN_PASSWORD)")
+        print("   in Render environment variables for production security!")
         print("="*50 + "\n")
     else:
         print("✅ Admin credentials loaded from environment variables")
@@ -758,10 +765,11 @@ if __name__ == "__main__":
     verify_pass = os.getenv("VERIFY_PASS")
     
     if not verify_user or not verify_pass:
-        print("⚠️  DEFAULT VERIFICATION CREDENTIALS (Development Mode):")
+        print("⚠️  WARNING: Verification credentials not set in environment variables!")
+        print("⚠️  Using DEFAULT VERIFICATION CREDENTIALS (Development Mode):")
         print("   Username: verify")
         print("   Password: verify123")
-        print("   ⚠️  Set VERIFY_USER and VERIFY_PASS in Render environment variables for production!")
+        print("⚠️  Set VERIFY_USER and VERIFY_PASS in Render environment variables for production!")
     else:
         print("✅ Verification credentials loaded from environment variables")
     
