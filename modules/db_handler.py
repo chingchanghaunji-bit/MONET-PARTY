@@ -127,6 +127,15 @@ def init_db():
             if not cur.fetchone():
                 cur.execute("ALTER TABLE allowed ADD COLUMN verified_at TIMESTAMP")
             
+            # Add money_amount column if it doesn't exist
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='allowed' AND column_name='money_amount'
+            """)
+            if not cur.fetchone():
+                cur.execute("ALTER TABLE allowed ADD COLUMN money_amount DECIMAL(10, 2) DEFAULT 0")
+            
             conn.commit()
             print("✅ Database initialized (table exists or created)")
     except Exception as e:
@@ -232,13 +241,13 @@ def fetch_all_users():
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT email, name, phone, registered, ticket_id, verified, 
-                       created_at, registered_at, verified_at
+                       created_at, registered_at, verified_at, money_amount
                 FROM allowed 
                 ORDER BY created_at DESC NULLS LAST, email ASC
             """)
             rows = cur.fetchall()
             # Convert to list of tuples for compatibility with existing template code
-            # Template expects: (email, name, phone, registered, ticket_id, verified, created_at, registered_at, verified_at)
+            # Template expects: (email, name, phone, registered, ticket_id, verified, created_at, registered_at, verified_at, money_amount)
             result = []
             for row in rows:
                 # Convert timestamps to strings for template compatibility
@@ -251,7 +260,8 @@ def fetch_all_users():
                     row[5],  # verified
                     row[6].isoformat() if row[6] else None,  # created_at
                     row[7].isoformat() if row[7] else None,  # registered_at
-                    row[8].isoformat() if row[8] else None   # verified_at
+                    row[8].isoformat() if row[8] else None,  # verified_at
+                    float(row[9]) if row[9] is not None else 0.0  # money_amount
                 ))
             return result
     except Exception as e:

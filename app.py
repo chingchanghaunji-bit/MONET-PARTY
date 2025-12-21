@@ -208,7 +208,46 @@ def register():
     return render_template("register.html")
 
 
+@app.route("/verify/login", methods=["GET", "POST"])
+def verify_login():
+    """Login page for verification system"""
+    if request.method == "POST":
+        user = request.form.get("username", "").strip()
+        pw = request.form.get("password", "").strip()
+
+        # Get verification credentials from environment variables
+        verify_user = os.getenv("VERIFY_USER", "verify")
+        verify_pass = os.getenv("VERIFY_PASS", "verify123")
+
+        if user == verify_user and pw == verify_pass:
+            session["verify"] = user
+            session.permanent = True
+            return redirect(url_for("verify"))
+
+        return render_template("verify_login.html", error="Invalid credentials. Please try again.")
+
+    return render_template("verify_login.html")
+
+
+@app.route("/verify/logout")
+def verify_logout():
+    """Logout from verification system"""
+    session.pop("verify", None)
+    return redirect(url_for("verify_login"))
+
+
+def verify_required(f):
+    """Decorator to require verification login"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "verify" not in session or not session.get("verify"):
+            return redirect(url_for("verify_login"))
+        return f(*args, **kwargs)
+    return wrapper
+
+
 @app.route("/verify", methods=["GET", "POST"])
+@verify_required
 def verify():
     if request.method == "POST":
         code = request.form["ticket_id"].strip().upper()
@@ -317,6 +356,7 @@ def edit_user(email):
         registered = request.form.get("registered", "0") == "1"
         verified = request.form.get("verified", "0") == "1"
         ticket_id = request.form.get("ticket_id", "").strip().upper()
+        money_amount = request.form.get("money_amount", "").strip()
         
         # Validate phone number if provided
         if phone:
@@ -329,6 +369,19 @@ def edit_user(email):
                 flash("Invalid phone number format. Please use 10-digit Indian mobile number.", "error")
                 return render_template("admin_edit_user.html", user=user)
         
+        # Validate money amount
+        try:
+            if money_amount:
+                money_amount = float(money_amount)
+                if money_amount < 0:
+                    flash("Money amount cannot be negative.", "error")
+                    return render_template("admin_edit_user.html", user=user)
+            else:
+                money_amount = 0.0
+        except ValueError:
+            flash("Invalid money amount. Please enter a valid number.", "error")
+            return render_template("admin_edit_user.html", user=user)
+        
         # Update user data
         update_data = {}
         if name:
@@ -337,6 +390,7 @@ def edit_user(email):
             update_data["phone"] = phone
         if ticket_id:
             update_data["ticket_id"] = ticket_id
+        update_data["money_amount"] = money_amount
         
         update_data["registered"] = 1 if registered else 0
         update_data["verified"] = 1 if verified else 0
@@ -515,9 +569,9 @@ def export_data():
     lines.append("")
     
     # Header row
-    header = f"{'S.No.':<6} {'Name':<25} {'Email':<30} {'Phone':<18} {'Ticket ID':<12} {'Registered':<12} {'Verified':<12} {'Created At':<20} {'Registered At':<20} {'Verified At':<20}"
+    header = f"{'S.No.':<6} {'Name':<25} {'Email':<30} {'Phone':<18} {'Ticket ID':<12} {'Money Amount':<15} {'Registered':<12} {'Verified':<12} {'Created At':<20} {'Registered At':<20} {'Verified At':<20}"
     lines.append(header)
-    lines.append("-" * 120)
+    lines.append("-" * 140)
     
     # Data rows
     for idx, user in enumerate(users, 1):
@@ -527,12 +581,13 @@ def export_data():
         registered = 'Yes' if user[3] == 1 else 'No'
         ticket_id = user[4] or 'N/A'
         verified = 'Yes' if user[5] == 1 else 'No'
+        money_amount = f"₹{user[9]:.2f}" if user[9] else '₹0.00'
         created_at = user[6][:19] if user[6] else 'N/A'
         registered_at = user[7][:19] if user[7] else 'N/A'
         verified_at = user[8][:19] if user[8] else 'N/A'
         
         # Format row with proper spacing
-        row = f"{idx:<6} {name[:24]:<25} {email[:29]:<30} {phone[:17]:<18} {ticket_id[:11]:<12} {registered:<12} {verified:<12} {created_at[:19]:<20} {registered_at[:19]:<20} {verified_at[:19]:<20}"
+        row = f"{idx:<6} {name[:24]:<25} {email[:29]:<30} {phone[:17]:<18} {ticket_id[:11]:<12} {money_amount:<15} {registered:<12} {verified:<12} {created_at[:19]:<20} {registered_at[:19]:<20} {verified_at[:19]:<20}"
         lines.append(row)
     
     lines.append("")
@@ -584,7 +639,7 @@ def export_data_excel():
     
     # Header row
     headers = [
-        'S.No.', 'Email', 'Name', 'Phone', 'Ticket ID', 
+        'S.No.', 'Email', 'Name', 'Phone', 'Ticket ID', 'Money Amount',
         'Registered', 'Verified', 'Created At', 'Registered At', 'Verified At'
     ]
     
@@ -605,12 +660,13 @@ def export_data_excel():
         registered = 'Yes' if user[3] == 1 else 'No'
         ticket_id = user[4] or 'N/A'
         verified = 'Yes' if user[5] == 1 else 'No'
+        money_amount = f"₹{user[9]:.2f}" if user[9] else '₹0.00'
         created_at = user[6][:19] if user[6] else 'N/A'
         registered_at = user[7][:19] if user[7] else 'N/A'
         verified_at = user[8][:19] if user[8] else 'N/A'
         
         row_data = [
-            idx, email, name, phone, ticket_id,
+            idx, email, name, phone, ticket_id, money_amount,
             registered, verified, created_at, registered_at, verified_at
         ]
         
