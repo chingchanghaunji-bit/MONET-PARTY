@@ -754,7 +754,9 @@ if __name__ == "__main__":
     print(f"📍 Server running on port: {port}")
     print("🔐 Admin login: /admin/login")
     print("📝 Register: /register")
-    print("✅ Verify: /verify\n")
+    print("✅ Verify: /verify/login (requires authentication)\n")
+    print("✅ Money Amount: Column added to database and admin dashboard\n")
+    print("✅ Version: 2.0.0 - Verification Lock + Money Amount Feature\n")
     
     app.run(
         host="0.0.0.0",
