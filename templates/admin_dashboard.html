@@ -123,10 +123,6 @@
                         <span>📄</span>
                         <span>Download Text File</span>
                     </a>
-                    <a href="/admin/backup" class="btn btn-warning" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                        <span>💾</span>
-                        <span>Backup & Recovery</span>
-                    </a>
                 </div>
             </div>
             <div style="padding: 1rem; background: var(--card-bg); border-top: 1px solid var(--border-color);">
@@ -235,7 +231,7 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <a href="/admin/edit/{{ user[0] }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
+                                    <a href="/admin/edit/{{ user[0] | urlencode }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
                                         <span>✏️</span>
                                         <span>Edit</span>
                                     </a>

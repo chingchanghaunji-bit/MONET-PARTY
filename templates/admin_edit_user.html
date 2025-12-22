@@ -39,7 +39,7 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" action="/admin/edit/{{ user.email }}">
+            <form method="POST" action="/admin/edit/{{ user.email | urlencode }}">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" 

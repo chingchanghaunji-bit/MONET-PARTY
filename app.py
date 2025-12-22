@@ -354,14 +354,18 @@ def add_allowed():
     return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/admin/edit/<email>", methods=["GET", "POST"])
+@app.route("/admin/edit/<path:email>", methods=["GET", "POST"])
 @login_required
 def edit_user(email):
     """Edit user information"""
+    # FIXED: Properly decode email from URL (handles special characters like +, @, etc.)
+    from urllib.parse import unquote
+    email = unquote(email)
+    
     user = get_user(email=email)
     
     if not user:
-        flash("User not found!", "error")
+        flash(f"User not found: {email}", "error")
         return redirect(url_for("admin_dashboard"))
     
     if request.method == "POST":
