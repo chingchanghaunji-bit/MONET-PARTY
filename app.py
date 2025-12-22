@@ -574,45 +574,96 @@ def download_ticket(ticket_id):
 @app.route("/admin/export")
 @login_required
 def export_data():
-    """Export all registered user data as a formatted text file"""
+    """Export all registered user data as a formatted text file with proper table formatting"""
     users = fetch_all_users()
+    
+    # Define column widths
+    col_widths = {
+        'sno': 6,
+        'name': 30,
+        'email': 35,
+        'phone': 20,
+        'ticket_id': 12,
+        'money': 15,
+        'registered': 12,
+        'verified': 12,
+        'created': 20,
+        'reg_at': 20,
+        'ver_at': 20
+    }
+    
+    # Calculate total table width
+    total_width = sum(col_widths.values()) + len(col_widths) + 1  # +1 for left border, +len for separators
     
     # Create formatted text content
     lines = []
-    lines.append("=" * 120)
-    lines.append("PARTY ENTRY SYSTEM - REGISTERED USERS DATA EXPORT")
-    lines.append("=" * 120)
+    
+    # Header section
+    lines.append("=" * total_width)
+    lines.append("PARTY ENTRY SYSTEM - REGISTERED USERS DATA EXPORT".center(total_width))
+    lines.append("=" * total_width)
     lines.append(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"Total Records: {len(users)}")
-    lines.append("=" * 120)
+    lines.append("=" * total_width)
     lines.append("")
     
-    # Header row
-    header = f"{'S.No.':<6} {'Name':<25} {'Email':<30} {'Phone':<18} {'Ticket ID':<12} {'Money Amount':<15} {'Registered':<12} {'Verified':<12} {'Created At':<20} {'Registered At':<20} {'Verified At':<20}"
-    lines.append(header)
-    lines.append("-" * 140)
+    # Table header with borders
+    header_row = (
+        f"| {'S.No.':<{col_widths['sno']}} | "
+        f"{'Name':<{col_widths['name']}} | "
+        f"{'Email':<{col_widths['email']}} | "
+        f"{'Phone':<{col_widths['phone']}} | "
+        f"{'Ticket ID':<{col_widths['ticket_id']}} | "
+        f"{'Money Amount':<{col_widths['money']}} | "
+        f"{'Registered':<{col_widths['registered']}} | "
+        f"{'Verified':<{col_widths['verified']}} | "
+        f"{'Created At':<{col_widths['created']}} | "
+        f"{'Registered At':<{col_widths['reg_at']}} | "
+        f"{'Verified At':<{col_widths['ver_at']}} |"
+    )
     
-    # Data rows
+    # Separator line
+    separator = "+" + "+".join(["-" * (w + 2) for w in col_widths.values()]) + "+"
+    
+    lines.append(separator)
+    lines.append(header_row)
+    lines.append(separator)
+    
+    # Data rows with borders
     for idx, user in enumerate(users, 1):
         email = user[0] or 'N/A'
-        name = user[1] or 'N/A'
-        phone = user[2] or 'N/A'
+        name = (user[1] or 'N/A')[:col_widths['name']]
+        phone = (user[2] or 'N/A')[:col_widths['phone']]
         registered = 'Yes' if user[3] == 1 else 'No'
-        ticket_id = user[4] or 'N/A'
+        ticket_id = (user[4] or 'N/A')[:col_widths['ticket_id']]
         verified = 'Yes' if user[5] == 1 else 'No'
         money_amount = f"₹{user[9]:.2f}" if user[9] else '₹0.00'
-        created_at = user[6][:19] if user[6] else 'N/A'
-        registered_at = user[7][:19] if user[7] else 'N/A'
-        verified_at = user[8][:19] if user[8] else 'N/A'
+        created_at = (user[6][:19] if user[6] else 'N/A')[:col_widths['created']]
+        registered_at = (user[7][:19] if user[7] else 'N/A')[:col_widths['reg_at']]
+        verified_at = (user[8][:19] if user[8] else 'N/A')[:col_widths['ver_at']]
         
-        # Format row with proper spacing
-        row = f"{idx:<6} {name[:24]:<25} {email[:29]:<30} {phone[:17]:<18} {ticket_id[:11]:<12} {money_amount:<15} {registered:<12} {verified:<12} {created_at[:19]:<20} {registered_at[:19]:<20} {verified_at[:19]:<20}"
+        # Format row with borders and proper spacing
+        row = (
+            f"| {str(idx):<{col_widths['sno']}} | "
+            f"{name:<{col_widths['name']}} | "
+            f"{email[:col_widths['email']]:<{col_widths['email']}} | "
+            f"{phone:<{col_widths['phone']}} | "
+            f"{ticket_id:<{col_widths['ticket_id']}} | "
+            f"{money_amount:<{col_widths['money']}} | "
+            f"{registered:<{col_widths['registered']}} | "
+            f"{verified:<{col_widths['verified']}} | "
+            f"{created_at:<{col_widths['created']}} | "
+            f"{registered_at:<{col_widths['reg_at']}} | "
+            f"{verified_at:<{col_widths['ver_at']}} |"
+        )
         lines.append(row)
+        lines.append(separator)
     
+    # Footer
     lines.append("")
-    lines.append("=" * 120)
-    lines.append("End of Report")
-    lines.append("=" * 120)
+    lines.append("=" * total_width)
+    lines.append("End of Report".center(total_width))
+    lines.append("=" * total_width)
     
     # Create response with text file
     content = "\n".join(lines)
