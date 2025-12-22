@@ -657,38 +657,7 @@ a, button, input, select, textarea, .btn {
     will-change: transform;
 }
 
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.btn:hover::before {
-    width: 400px;
-    height: 400px;
-}
-
-.btn::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.btn:hover::after {
-    left: 100%;
-}
+/* Removed button overlay effects - simple normal press only */
 
 .btn-primary {
     border-color: var(--glass-border);
@@ -702,19 +671,16 @@ a, button, input, select, textarea, .btn {
 }
 
 .btn-primary:hover {
-    /* Smooth energy activation - Blue → Violet */
-    transform: translateZ(0) translateY(-3px) scale(1.02);
-    border-color: var(--spectral-violet);
-    color: var(--text-primary);
+    /* Simple hover effect - no big overlay */
     background: var(--btn-energy-hover);
-    box-shadow: 
-        0 0 20px rgba(139, 108, 255, 0.4),
-        0 0 40px rgba(91, 124, 255, 0.25),
-        inset 0 0 25px rgba(139, 108, 255, 0.15);
-    text-shadow: 
-        0 0 10px rgba(139, 108, 255, 0.5),
-        0 2px 4px rgba(0, 0, 0, 0.3);
-    will-change: transform;
+    border-color: var(--spectral-violet);
+    opacity: 0.9;
+}
+
+.btn-primary:active {
+    /* Simple press effect */
+    transform: translateZ(0) scale(0.98);
+    opacity: 0.8;
 }
 
 .btn-secondary {
@@ -729,19 +695,16 @@ a, button, input, select, textarea, .btn {
 }
 
 .btn-secondary:hover {
-    /* Smooth energy activation - Cyan accent */
-    transform: translateZ(0) translateY(-3px) scale(1.02);
-    border-color: var(--cyan-accent);
-    color: var(--text-primary);
+    /* Simple hover effect - no big overlay */
     background: rgba(77, 227, 255, 0.2);
-    box-shadow: 
-        0 0 20px rgba(77, 227, 255, 0.4),
-        0 0 40px rgba(77, 227, 255, 0.25),
-        inset 0 0 25px rgba(77, 227, 255, 0.15);
-    text-shadow: 
-        0 0 10px rgba(77, 227, 255, 0.5),
-        0 2px 4px rgba(0, 0, 0, 0.3);
-    will-change: transform;
+    border-color: var(--cyan-accent);
+    opacity: 0.9;
+}
+
+.btn-secondary:active {
+    /* Simple press effect */
+    transform: translateZ(0) scale(0.98);
+    opacity: 0.8;
 }
 
 .btn-success {
@@ -755,6 +718,15 @@ a, button, input, select, textarea, .btn {
         0 0 20px rgba(0, 255, 136, 0.6);
 }
 
+.btn-success:hover {
+    opacity: 0.9;
+}
+
+.btn-success:active {
+    transform: translateZ(0) scale(0.98);
+    opacity: 0.8;
+}
+
 .btn-danger {
     border-color: var(--spectral-violet);
     color: var(--text-primary);
@@ -763,6 +735,15 @@ a, button, input, select, textarea, .btn {
         0 0 8px rgba(139, 108, 255, 0.4),
         0 2px 4px rgba(0, 0, 0, 0.3);
     background: rgba(139, 108, 255, 0.1);
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+.btn-danger:active {
+    transform: translateZ(0) scale(0.98);
+    opacity: 0.8;
 }
 
 .btn-block {
