@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUCCESS - AFTER PARTY</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify">Verify Ticket</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card card-max-width card-center">
+            <div class="success-icon">✅</div>
+            <h1 style="margin-bottom: 1rem;">Registration Successful!</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem; color: var(--text-secondary);">
+                Congratulations {{ name }}! Your party ticket has been generated.
+            </p>
+
+            <div class="qr-container">
+                <img src="/static/qrcodes/{{ ticket_id }}.png" alt="QR Code" id="qr-image">
+            </div>
+
+            <div class="ticket-code" id="ticket-id">{{ ticket_id }}</div>
+
+            <!-- Download Buttons -->
+            <div style="display: flex; gap: 1rem; justify-content: center; margin: 2rem 0; flex-wrap: wrap;">
+                <button onclick="downloadQRCode('{{ ticket_id }}')" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📥</span>
+                    <span>Download QR Code</span>
+                </button>
+                <button onclick="downloadTicketID('{{ ticket_id }}')" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span>🔑</span>
+                    <span>Download Ticket ID</span>
+                </button>
+                <a href="/download/ticket/{{ ticket_id }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <span>📄</span>
+                    <span>Download Full Ticket</span>
+                </a>
+            </div>
+
+            <!-- Warning Alert -->
+            <div class="alert alert-warning" style="margin: 2rem 0; border-left: 4px solid #ff9800;">
+                <strong>⚠️ IMPORTANT WARNING</strong><br>
+                <p style="margin: 0.5rem 0;">
+                    <strong>Loss of this code will lead to loss of pass and NO REFUND will be provided in case of misuse of this code.</strong>
+                </p>
+                <p style="margin: 0.5rem 0; font-size: 0.95rem;">
+                    Please save your QR code and download your ticket ID immediately. Keep them safe and secure.
+                </p>
+            </div>
+
+            <div class="alert alert-success" style="margin: 2rem 0;">
+                <strong>📧 Check Your Email!</strong><br>
+                Your ticket and QR code have been sent to your email address. 
+                Please save this information for entry at the party.
+            </div>
+
+            <div class="info-box">
+                <h3>Important Information:</h3>
+                <ul>
+                    <li>✓ Save your QR code image</li>
+                    <li>✓ Remember your Ticket ID: <strong>{{ ticket_id }}</strong></li>
+                    <li>✓ Bring a valid ID to the party</li>
+                    <li>✓ Show your QR code or Ticket ID at entry</li>
+                </ul>
+            </div>
+
+            <div class="card-footer">
+                <a href="/" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+
+    <script>
+        // Show alert when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                alert('⚠️ IMPORTANT: Please save your QR code and download your ticket ID!\n\nLoss of this code will lead to loss of pass and NO REFUND will be provided in case of misuse of this code.\n\nPlease download and save your ticket immediately.');
+            }, 500);
+        });
+
+        // Download QR Code
+        function downloadQRCode(ticketId) {
+            const link = document.createElement('a');
+            link.href = `/static/qrcodes/${ticketId}.png`;
+            link.download = `QR_Code_${ticketId}.png`;
+            link.click();
+            
+            // Show confirmation
+            setTimeout(function() {
+                alert('✅ QR Code downloaded successfully!\n\nPlease save it in a safe place.');
+            }, 100);
+        }
+
+        // Download Ticket ID as text file
+        function downloadTicketID(ticketId) {
+            const content = `PARTY ENTRY TICKET ID\n\nTicket ID: ${ticketId}\n\nIMPORTANT:\n- Keep this ticket ID safe and secure\n- Loss of this code will lead to loss of pass\n- NO REFUND will be provided in case of misuse\n- Show this ID or QR code at party entry\n\nGenerated: ${new Date().toLocaleString()}\n\n© 2026 AFTER PARTY`;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Ticket_ID_${ticketId}.txt`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            // Show confirmation
+            setTimeout(function() {
+                alert('✅ Ticket ID downloaded successfully!\n\nPlease save it in a safe place.');
+            }, 100);
+        }
+
+        // Download Full Ticket (handled by server route)
+        function downloadFullTicket(ticketId) {
+            // This is handled by the server route /download/ticket/<ticket_id>
+            setTimeout(function() {
+                alert('✅ Full ticket downloaded successfully!\n\nPlease save it in a safe place.');
+            }, 500);
+        }
+    </script>
+</body>
+</html>

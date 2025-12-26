@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFTER PARTY - Entry System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify/login">Verify Ticket</a></li>
+                <li><a href="/admin/login">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <div class="hero-content">
+                <h1>AFTER PARTY</h1>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn btn-primary">🎟️ GET YOUR TICKET</a>
+                    <a href="/verify/login" class="btn btn-secondary">🔍 VERIFY ENTRY</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card card">
+                <div class="feature-icon">⚡</div>
+                <h3>INSTANT REGISTRATION</h3>
+                <p>Neural-linked registration process. Get your digital ticket in seconds.</p>
+            </div>
+            <div class="feature-card card">
+                <div class="feature-icon">🔮</div>
+                <h3>QUANTUM QR ACCESS</h3>
+                <p>Holographic QR code generation for seamless neural entry verification.</p>
+            </div>
+            <div class="feature-card card">
+                <div class="feature-icon">🛡️</div>
+                <h3>CYBER SECURITY</h3>
+                <p>Advanced AI-powered verification ensures only authorized neural patterns enter.</p>
+            </div>
+            <div class="feature-card card">
+                <div class="feature-icon">🚀</div>
+                <h3>LIGHTSPEED ENTRY</h3>
+                <p>Quantum verification process gets you inside the party at lightspeed.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>⚡ NEURAL NETWORK PROTOCOL ⚡</h2>
+            </div>
+            <div class="steps-grid">
+                <div class="step-item">
+                    <h3 class="step-title step-blue">⚡ STEP 1: ADMIN APPROVAL</h3>
+                    <p>Administrator adds your signature to the approved database.</p>
+                </div>
+                <div class="step-item">
+                    <h3 class="step-title step-violet">🔮 STEP 2: REGISTER</h3>
+                    <p>Complete your registration with your details.</p>
+                </div>
+                <div class="step-item">
+                    <h3 class="step-title step-blue">🎟️ STEP 3: GET TICKET</h3>
+                    <p>Receive your QR code and digital ticket ID via email.</p>
+                </div>
+                <div class="step-item">
+                    <h3 class="step-title step-violet">🚀 STEP 4: ENTER</h3>
+                    <p>Present your QR code at the entrance portal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+</body>
+</html>
