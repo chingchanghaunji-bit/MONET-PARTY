@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN DASHBOARD - AFTER PARTY</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY ADMIN</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin/logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage party registrations and verify entries</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" style="margin-bottom: 1.5rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Database Status Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <h2 style="margin: 0;">📊 Database Status</h2>
+            </div>
+            <div style="padding: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <strong>Database Type:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            <span class="badge badge-success">✅ PostgreSQL</span>
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Connection Status:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            {% if db_info and db_info.pool_active %}
+                                <span class="badge badge-success">✅ Connected</span>
+                            {% else %}
+                                <span class="badge badge-danger">❌ Not Connected</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Storage:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            <span class="badge badge-success">✅ Persistent</span>
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Environment:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            {% if db_info and db_info.is_render %}
+                                <span class="badge badge-info">Render</span>
+                            {% else %}
+                                <span class="badge badge-info">Local</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% if db_info and db_info.url and db_info.url != 'Not configured' %}
+                <div class="alert alert-success" style="background-color: #d4edda; border: 1px solid #28a745; padding: 0.75rem; border-radius: 4px; margin: 0;">
+                    <strong>✅ PostgreSQL Connected:</strong> Your data is stored in PostgreSQL and will persist across redeploys, restarts, and crashes. Render automatically backs up PostgreSQL databases.
+                </div>
+                {% else %}
+                <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem; border-radius: 4px; margin: 0;">
+                    <strong>⚠️ DATABASE_URL Not Set:</strong> Please create a PostgreSQL database in Render and set the <code>DATABASE_URL</code> environment variable.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.registered }}</div>
+                <div class="stat-label">Registered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.verified }}</div>
+                <div class="stat-label">Verified Entries</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.pending }}</div>
+                <div class="stat-label">Pending Registration</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="margin: 0;">Actions</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="/admin/export/excel" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📊</span>
+                        <span>Download Excel</span>
+                    </a>
+                    <a href="/admin/export" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📄</span>
+                        <span>Download Text File</span>
+                    </a>
+                </div>
+            </div>
+            <div style="padding: 1rem; background: var(--card-bg); border-top: 1px solid var(--border-color);">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong>📁 Data Storage Location:</strong> Your data is stored in <strong>PostgreSQL</strong> database (persistent, backed up automatically by Render).
+                    <br>You can export all data using the buttons above to view in Excel or text format.
+                </p>
+            </div>
+        </div>
+
+        <!-- Add User Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Add Authorized User</h2>
+            </div>
+            <form method="POST" action="/admin/add" class="add-user-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" required 
+                           placeholder="user@example.com">
+                </div>
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </form>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card">
+            <div class="search-bar">
+                <input type="text" id="search-input" class="form-control" placeholder="Search users by email, name, phone, or ticket ID...">
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0;">All Users</h2>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-secondary);">
+                        Showing <strong>{{ stats.displayed_count }}</strong> of <strong>{{ stats.total }}</strong> total users
+                    </p>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="/admin/export/excel" class="btn btn-success" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📊</span>
+                        <span>Excel</span>
+                    </a>
+                    <a href="/admin/export" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📄</span>
+                        <span>Text</span>
+                    </a>
+                </div>
+            </div>
+            <div class="table-container" style="max-height: 70vh; overflow-y: auto;">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Ticket ID</th>
+                            <th>Money Amount</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Verified</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        {% for user in users %}
+                        <tr class="user-row">
+                            <td>{{ user[0] }}</td>
+                            <td>{{ user[1] or 'N/A' }}</td>
+                            <td>{{ user[2] or 'N/A' }}</td>
+                            <td style="font-family: monospace; font-weight: bold;">{{ user[4] or 'N/A' }}</td>
+                            <td style="font-weight: bold; color: #00ff88;">₹{{ "%.2f"|format(user[9]) if user[9] else "0.00" }}</td>
+                            <td>
+                                {% if user[5] == 1 %}
+                                    <span class="badge badge-success">Verified</span>
+                                {% elif user[3] == 1 %}
+                                    <span class="badge badge-warning">Registered</span>
+                                {% else %}
+                                    <span class="badge badge-info">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user[3] == 1 %}
+                                    <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user[5] == 1 %}
+                                    <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.875rem; color: var(--text-secondary);">
+                                {% if user[6] %}
+                                    {{ user[6][:10] }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <a href="/admin/edit/{{ user[0] | urlencode }}" class="btn btn-primary" style="text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span>✏️</span>
+                                        <span>Edit</span>
+                                    </a>
+                                    <form method="POST" action="/admin/delete/{{ user[0] }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete user {{ user[0] }}? This action cannot be undone.');">
+                                        <button type="submit" class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; border: none;">
+                                            <span>🗑️</span>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if users|length == 0 %}
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No users found. Add users to get started.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% if users|length > 0 %}
+            <div style="padding: 1rem; background: var(--card-bg); border-top: 1px solid var(--border-color); text-align: center;">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong>Total Records:</strong> {{ stats.total }} | 
+                    <strong>Displayed:</strong> {{ stats.displayed_count }} | 
+                    <strong>Capacity:</strong> Up to 150+ users supported
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+
+    <script>
+        // Search functionality - FIXED: Ensures all rows are searchable
+        const searchInput = document.getElementById('search-input');
+        const table = document.getElementById('users-table');
+        const tbody = document.getElementById('users-tbody');
+        const rows = tbody.getElementsByClassName('user-row');
+
+        // Display all rows by default
+        function showAllRows() {
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.display = '';
+            }
+        }
+
+        // Initialize - show all rows
+        showAllRows();
+
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase().trim();
+            
+            if (filter === '') {
+                // Show all rows if search is empty
+                showAllRows();
+            } else {
+                // Filter rows based on search
+                let visibleCount = 0;
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const text = row.textContent.toLowerCase();
+                    
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+                
+                // Show message if no results
+                let noResults = document.getElementById('no-results-msg');
+                if (visibleCount === 0 && rows.length > 0) {
+                    if (!noResults) {
+                        noResults = document.createElement('tr');
+                        noResults.id = 'no-results-msg';
+                        noResults.innerHTML = `<td colspan="10" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No users found matching "${this.value}"</td>`;
+                        tbody.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
+            }
+        });
+
+        // Log total rows for debugging
+        console.log('Total users loaded:', rows.length);
+    </script>
+</body>
+</html>

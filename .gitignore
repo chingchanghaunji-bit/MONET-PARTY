@@ -9,6 +9,10 @@ env/
 ENV/
 .venv
 
+# Flask
+instance/
+.webassets-cache
+
 # Database
 *.db
 *.sqlite
@@ -30,7 +34,7 @@ ENV/
 Thumbs.db
 
 # QR Codes (generated files)
-party_entry_app/static/qrcodes/*.png
+static/qrcodes/*.png
 
 # Logs
 *.log
