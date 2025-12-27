@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETRIEVE TICKET - AFTER PARTY</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify/login">Verify Ticket</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card card-max-width card-center">
+            <div class="card-header card-center">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <h2>Retrieve Your Ticket</h2>
+                <p class="card-subtitle">Enter your email or ticket ID to retrieve your QR code</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/retrieve">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="Enter your registered email address" autofocus>
+                    <small class="form-hint">Enter the email you used during registration</small>
+                </div>
+
+                <div style="text-align: center; margin: 1.5rem 0; color: var(--text-secondary);">
+                    <strong>OR</strong>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticket_id">Ticket ID</label>
+                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" 
+                           placeholder="Enter your 8-character ticket ID" maxlength="8" style="text-transform: uppercase;">
+                    <small class="form-hint">Enter your 8-character ticket ID (e.g., A1B2C3D4)</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">🔍 Retrieve Ticket</button>
+            </form>
+
+            <div class="card-footer">
+                <a href="/" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+</body>
+</html>
+

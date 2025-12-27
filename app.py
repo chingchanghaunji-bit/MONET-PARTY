@@ -234,6 +234,51 @@ def register():
     return render_template("register.html")
 
 
+@app.route("/retrieve", methods=["GET", "POST"])
+def retrieve_ticket():
+    """Retrieve ticket by email or ticket ID"""
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        ticket_id = request.form.get("ticket_id", "").strip().upper()
+        
+        user = None
+        
+        # Try to find user by email or ticket_id
+        if email:
+            user = get_user(email=email)
+        elif ticket_id:
+            user = get_user(ticket_id=ticket_id)
+        
+        if not user:
+            return render_template("retrieve.html", error="❌ No ticket found. Please check your email or ticket ID and try again.")
+        
+        if not user.get("registered"):
+            return render_template("retrieve.html", error="❌ You haven't registered yet. Please register first to get your ticket.")
+        
+        if not user.get("ticket_id"):
+            return render_template("retrieve.html", error="❌ No ticket ID found. Please contact administrator.")
+        
+        ticket_id = user["ticket_id"]
+        qr_path = os.path.join(app.config["UPLOAD_FOLDER"], f"{ticket_id}.png")
+        
+        # If QR code file doesn't exist, regenerate it
+        if not os.path.exists(qr_path):
+            try:
+                generate_qr(ticket_id, qr_path)
+                print(f"✅ Regenerated QR code for ticket: {ticket_id}")
+            except Exception as e:
+                print(f"❌ Error regenerating QR code: {e}")
+                return render_template("retrieve.html", error="❌ Error generating QR code. Please contact administrator.")
+        
+        # Show the ticket (reuse success.html template)
+        return render_template("success.html", 
+                             name=user.get("name", "Guest"), 
+                             ticket_id=ticket_id, 
+                             qr_path=qr_path)
+    
+    return render_template("retrieve.html")
+
+
 @app.route("/verify/login", methods=["GET", "POST"])
 def verify_login():
     """Verification login page with separate credentials"""
