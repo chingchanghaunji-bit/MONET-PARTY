@@ -306,8 +306,8 @@ def admin_login():
         # Get admin credentials with proper environment variable handling
         # Support ADMIN_USER/ADMIN_PASS, ADMIN_ID/ADMIN_PASSWORD, and ADMIN_SECRET
         # Works on both local and Render production
-        admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID") or "admin"
-        admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SECRET") or "admin123"
+        admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID") or "hanu"
+        admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SECRET") or "hanumanji"
 
         # Debug logging (remove in production if needed)
         if not admin_user or not admin_pass:
@@ -827,7 +827,7 @@ admin_user = os.getenv("ADMIN_USER") or os.getenv("ADMIN_ID")
 admin_pass = os.getenv("ADMIN_PASS") or os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SECRET")
 
 if not admin_user or not admin_pass:
-    print("⚠️  WARNING: Admin credentials not set - using defaults (admin/admin123)")
+    print("⚠️  WARNING: Admin credentials not set - using defaults (hanu/hanumanji)")
     print("⚠️  Set ADMIN_USER and ADMIN_PASS in environment variables for production!")
 else:
     print("✅ Admin credentials configured")
