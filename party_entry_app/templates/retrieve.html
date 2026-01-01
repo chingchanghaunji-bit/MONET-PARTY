@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETRIEVE TICKET - AFTER PARTY</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <!-- Unicorn Studio Animated Background -->
+    <div id="unicorn-studio-background"></div>
+    <script src="{{ url_for('static', filename='js/unicorn-studio.js') }}"></script>
+    
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">AFTER PARTY</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Register</a></li>
+                <li><a href="/verify/login">Verify Ticket</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card card-max-width">
+            <div class="card-header">
+                <h2>Retrieve Your Ticket</h2>
+                <p class="card-subtitle">Enter your email or ticket ID to retrieve your ticket information</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if user %}
+            <!-- Ticket Information Display -->
+            <div class="alert alert-success" style="margin: 1.5rem 0;">
+                <strong>✅ Ticket Found!</strong> Your ticket information is displayed below.
+            </div>
+
+            <div class="qr-container" style="text-align: center; margin: 2rem 0;">
+                {% if qr_exists %}
+                <img src="/static/qrcodes/{{ user.ticket_id }}.png" alt="QR Code" id="qr-image" style="max-width: 300px; border: 2px solid var(--primary-color); border-radius: 8px; padding: 1rem; background: white;">
+                {% else %}
+                <div class="alert alert-warning">
+                    QR code image not found. Please contact administrator.
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="ticket-info" style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+                <h3 style="margin-top: 0;">Ticket Details</h3>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <strong>Name:</strong>
+                        <span style="display: block; margin-top: 0.25rem; font-size: 1.1rem;">{{ user.name or 'N/A' }}</span>
+                    </div>
+                    <div>
+                        <strong>Email:</strong>
+                        <span style="display: block; margin-top: 0.25rem; font-size: 1.1rem;">{{ user.email }}</span>
+                    </div>
+                    <div>
+                        <strong>Phone:</strong>
+                        <span style="display: block; margin-top: 0.25rem; font-size: 1.1rem;">{{ user.phone or 'N/A' }}</span>
+                    </div>
+                    <div>
+                        <strong>Ticket ID:</strong>
+                        <span style="display: block; margin-top: 0.25rem; font-size: 1.3rem; font-family: monospace; font-weight: bold; color: var(--primary-color);" id="ticket-id">{{ user.ticket_id }}</span>
+                    </div>
+                    <div>
+                        <strong>Status:</strong>
+                        <span style="display: block; margin-top: 0.25rem;">
+                            {% if user.verified %}
+                                <span class="badge badge-success">✅ Verified (Entry Complete)</span>
+                            {% elif user.registered %}
+                                <span class="badge badge-warning">🎟️ Registered (Pending Entry)</span>
+                            {% else %}
+                                <span class="badge badge-info">⏳ Pending Registration</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Buttons -->
+            {% if qr_exists %}
+            <div style="display: flex; gap: 1rem; justify-content: center; margin: 2rem 0; flex-wrap: wrap;">
+                <button onclick="downloadQRCode('{{ user.ticket_id }}')" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📥</span>
+                    <span>Download QR Code</span>
+                </button>
+                <button onclick="downloadTicketID('{{ user.ticket_id }}')" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span>🔑</span>
+                    <span>Download Ticket ID</span>
+                </button>
+                <a href="/download/ticket/{{ user.ticket_id }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <span>📄</span>
+                    <span>Download Full Ticket</span>
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="alert alert-warning" style="margin: 2rem 0; border-left: 4px solid #ff9800;">
+                <strong>⚠️ IMPORTANT WARNING</strong><br>
+                <p style="margin: 0.5rem 0;">
+                    <strong>Loss of this code will lead to loss of pass and NO REFUND will be provided in case of misuse of this code.</strong>
+                </p>
+                <p style="margin: 0.5rem 0; font-size: 0.95rem;">
+                    Please save your QR code and download your ticket ID immediately. Keep them safe and secure.
+                </p>
+            </div>
+
+            <div class="card-footer">
+                <a href="/retrieve" class="btn btn-secondary">Retrieve Another Ticket</a>
+                <a href="/" class="btn btn-primary">Back to Home</a>
+            </div>
+
+            {% else %}
+            <!-- Retrieve Form -->
+            <form method="POST" action="/retrieve">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="your.email@example.com">
+                    <small class="form-hint">
+                        Enter the email address you used for registration
+                    </small>
+                </div>
+
+                <div style="text-align: center; margin: 1.5rem 0; color: var(--text-secondary);">
+                    <strong>OR</strong>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticket_id">Ticket ID</label>
+                    <input type="text" id="ticket_id" name="ticket_id" class="form-control ticket-input" 
+                           placeholder="Enter 8-character code" maxlength="8" style="text-transform: uppercase;">
+                    <small class="form-hint">
+                        Enter your 8-character ticket ID
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Retrieve Ticket</button>
+            </form>
+
+            <div class="card-footer">
+                <p>Don't have a ticket yet? <a href="/register" style="color: var(--primary-color); text-decoration: underline;">Register here</a></p>
+                <a href="/" class="back-link">← Back to Home</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 AFTER PARTY. All rights reserved. | LIGHT-BEAM VERIFICATION SYSTEM</p>
+    </footer>
+
+    <script>
+        // Auto-uppercase ticket ID input
+        const ticketInput = document.getElementById('ticket_id');
+        if (ticketInput) {
+            ticketInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+        }
+
+        // Download QR Code
+        function downloadQRCode(ticketId) {
+            const link = document.createElement('a');
+            link.href = `/static/qrcodes/${ticketId}.png`;
+            link.download = `QR_Code_${ticketId}.png`;
+            link.click();
+            
+            // Show confirmation
+            setTimeout(function() {
+                alert('✅ QR Code downloaded successfully!\n\nPlease save it in a safe place.');
+            }, 100);
+        }
+
+        // Download Ticket ID as text file
+        function downloadTicketID(ticketId) {
+            const content = `PARTY ENTRY TICKET ID\n\nTicket ID: ${ticketId}\n\nIMPORTANT:\n- Keep this ticket ID safe and secure\n- Loss of this code will lead to loss of pass\n- NO REFUND will be provided in case of misuse\n- Show this ID or QR code at party entry\n\nGenerated: ${new Date().toLocaleString()}\n\n© 2026 AFTER PARTY`;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Ticket_ID_${ticketId}.txt`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            // Show confirmation
+            setTimeout(function() {
+                alert('✅ Ticket ID downloaded successfully!\n\nPlease save it in a safe place.');
+            }, 100);
+        }
+    </script>
+</body>
+</html>
+

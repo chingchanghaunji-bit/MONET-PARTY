@@ -234,6 +234,34 @@ def register():
     return render_template("register.html")
 
 
+@app.route("/retrieve", methods=["GET", "POST"])
+def retrieve():
+    """Retrieve ticket information by email or ticket ID"""
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        ticket_id = request.form.get("ticket_id", "").strip().upper()
+        
+        user = None
+        if email:
+            user = get_user(email=email)
+        elif ticket_id:
+            user = get_user(ticket_id=ticket_id)
+        
+        if not user:
+            return render_template("retrieve.html", error="No ticket found with the provided email or ticket ID.")
+        
+        if not user.get("registered"):
+            return render_template("retrieve.html", error="You have not registered yet. Please register first.")
+        
+        # Check if QR code exists
+        qr_path = os.path.join(app.config["UPLOAD_FOLDER"], f"{user['ticket_id']}.png")
+        qr_exists = os.path.exists(qr_path)
+        
+        return render_template("retrieve.html", user=user, qr_exists=qr_exists, qr_path=qr_path)
+    
+    return render_template("retrieve.html")
+
+
 @app.route("/verify/login", methods=["GET", "POST"])
 def verify_login():
     """Verification login page with separate credentials"""
